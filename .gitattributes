@@ -1,1 +1,5 @@
 *.html linguist-detectable=false
+
+# Enforce LF line endings for all text files (prevents CRLF on Windows)
+* text=auto eol=lf
+bin/* text eol=lf
