@@ -1,4 +1,1 @@
-<svg class="<%= local_assigns[:class] %>" height="<%= local_assigns.fetch(:height, '37') %>" width="<%= local_assigns.fetch(:width, '37') %>" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" aria-label="Buxtons logo">
-  <rect width="180" height="180" rx="22" fill="#94be58"/>
-  <text x="90" y="135" font-family="Georgia, serif" font-size="130" font-weight="700" text-anchor="middle" fill="#ffffff">B</text>
-</svg>
+﻿<%= image_tag 'logo.svg', class: local_assigns[:class], alt: 'Buxtons logo', height: local_assigns.fetch(:height, '37'), width: local_assigns.fetch(:width, '200') %>
