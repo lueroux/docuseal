@@ -38,7 +38,7 @@ COPY ./tailwind.application.config.js ./tailwind.application.config.js
 COPY ./app/javascript ./app/javascript
 COPY ./app/views ./app/views
 
-RUN echo "gem 'shakapacker'" > Gemfile && ./bin/shakapacker
+RUN chmod +x ./bin/shakapacker && echo "gem 'shakapacker'" > Gemfile && ./bin/shakapacker
 
 FROM ruby:4.0.5-alpine AS app
 
