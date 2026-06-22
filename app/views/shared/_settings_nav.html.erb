@@ -29,13 +29,7 @@
           </li>
         <% end %>
       <% end %>
-      <%# Temporarily disabled — route helper issue
-      <% if can?(:read, EncryptedConfig.new(key: EncryptedConfig::IBCOS_GOLD_KEY, account: current_account)) && !Docuseal.multitenant? && true_user == current_user %>
-        <li>
-          <%= link_to 'IBCOS Gold', settings_ibcos_index_path, class: 'text-base hover:bg-base-300' %>
-        </li>
-      <% end %>
-      %>
+      <%# IBCOS link temporarily disabled — investigating route helper issue %>
       <% if can?(:read, AccountConfig) %>
         <li>
           <%= link_to t('notifications'), settings_notifications_path, class: 'text-base hover:bg-base-300' %>
