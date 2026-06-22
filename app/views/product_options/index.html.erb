@@ -1,0 +1,106 @@
+<% content_for :html_title, "Product Options · #{@product.display_name}" %>
+
+<div class="mb-6">
+  <%= link_to product_path(@product), class: "btn btn-sm btn-ghost" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    Back to Product
+  <% end %>
+</div>
+
+<div class="card bg-base-100 shadow-xl">
+  <div class="card-body">
+    <h2 class="card-title">Product Options for <%= @product.display_name %></h2>
+
+    <% if @product_options.any? %>
+      <div class="overflow-x-auto mt-4">
+        <table class="table table-zebra">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Group</th>
+              <th>Type</th>
+              <th>Price</th>
+              <th>Required</th>
+              <th>Sort Order</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @product_options.each do |option| %>
+              <tr>
+                <td><%= option.name %></td>
+                <td><%= option.option_group || '-' %></td>
+                <td><%= option.option_type %></td>
+                <td><%= number_to_currency(option.price) %></td>
+                <td><%= option.is_required ? 'Yes' : 'No' %></td>
+                <td><%= option.sort_order %></td>
+                <td>
+                  <%= button_to 'Remove', product_product_option_path(@product, option), method: :delete,
+                                class: "btn btn-xs btn-error",
+                                data: { turbo_confirm: "Are you sure you want to remove this option?" } %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="alert alert-info mt-4">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span>No product options yet. Add the first option below.</span>
+      </div>
+    <% end %>
+
+    <div class="divider"></div>
+
+    <h3 class="font-bold text-lg">Add New Option</h3>
+    <%= form_with model: [@product, @product.product_options.build], local: true do |f| %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div class="form-control">
+          <label class="label"><span class="label-text">Name</span></label>
+          <%= f.text_field :name, class: "input input-bordered", required: true %>
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">Option Group</span></label>
+          <%= f.text_field :option_group, class: "input input-bordered", placeholder: "e.g., Color, Size" %>
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">Option Type</span></label>
+          <%= f.select :option_type, %w[addon warranty bundle], {}, class: "select select-bordered", required: true %>
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">Price</span></label>
+          <%= f.number_field :price, class: "input input-bordered", step: "0.01", required: true %>
+        </div>
+
+        <div class="form-control">
+          <label class="label"><span class="label-text">Sort Order</span></label>
+          <%= f.number_field :sort_order, class: "input input-bordered", value: "0" %>
+        </div>
+
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <span class="label-text">Required</span>
+            <%= f.check_box :is_required, class: "checkbox" %>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-control mt-4">
+        <label class="label"><span class="label-text">Description</span></label>
+        <%= f.text_area :description, class: "textarea textarea-bordered", rows: 3 %>
+      </div>
+
+      <div class="mt-4">
+        <%= f.submit "Add Option", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+</div>
