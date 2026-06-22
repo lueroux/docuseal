@@ -36,6 +36,7 @@ class ProductOptionsController < ApplicationController
 
   def product_option_params
     params.require(:product_option).permit(
+      :sku,
       :name,
       :description,
       :price,

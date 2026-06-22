@@ -18,6 +18,7 @@
         <table class="table table-zebra">
           <thead>
             <tr>
+              <th>SKU</th>
               <th>Name</th>
               <th>Group</th>
               <th>Type</th>
@@ -30,6 +31,7 @@
           <tbody>
             <% @product_options.each do |option| %>
               <tr>
+                <td><%= option.sku %></td>
                 <td><%= option.name %></td>
                 <td><%= option.option_group || '-' %></td>
                 <td><%= option.option_type %></td>
@@ -60,6 +62,11 @@
     <h3 class="font-bold text-lg">Add New Option</h3>
     <%= form_with model: [@product, @product.product_options.build], local: true do |f| %>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div class="form-control">
+          <label class="label"><span class="label-text">SKU</span></label>
+          <%= f.text_field :sku, class: "input input-bordered", required: true, placeholder: "e.g., OPT-001" %>
+        </div>
+
         <div class="form-control">
           <label class="label"><span class="label-text">Name</span></label>
           <%= f.text_field :name, class: "input input-bordered", required: true %>
