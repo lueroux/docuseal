@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+    <h2 style="color: #252525;">Sign in to your Buxtons Quote Portal</h2>
+    <p>Hi <%= @customer.name %>,</p>
+    <p>Click the button below to sign in. This link expires in <strong>1 hour</strong>.</p>
+
+    <p style="margin: 32px 0;">
+      <a href="<%= @magic_link_url %>"
+         style="background: #94be58; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+        Sign in to Portal
+      </a>
+    </p>
+
+    <p style="color: #666; font-size: 13px;">
+      If you didn't request this, you can safely ignore this email.<br>
+      Link: <%= @magic_link_url %>
+    </p>
+  </body>
+</html>

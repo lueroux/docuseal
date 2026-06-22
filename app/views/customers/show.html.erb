@@ -1,0 +1,42 @@
+<div class="flex items-start justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold"><%= @customer.name %></h1>
+    <p class="opacity-60 text-sm mt-1">
+      <%= @customer.email %>
+      <% if @customer.phone.present? %>· <%= @customer.phone %><% end %>
+      <% if @customer.company %>
+        · <%= link_to @customer.company.name, company_path(@customer.company), class: 'link link-hover' %>
+      <% end %>
+    </p>
+  </div>
+  <div class="flex gap-2">
+    <%= link_to 'Edit', edit_customer_path(@customer), class: 'btn btn-sm btn-ghost' %>
+    <%= button_to 'Delete', customer_path(@customer), method: :delete,
+          data: { confirm: 'Delete this customer?' },
+          class: 'btn btn-sm btn-error btn-outline' %>
+  </div>
+</div>
+
+<% if @customer.notes.present? %>
+  <div class="prose mb-6"><p><%= @customer.notes %></p></div>
+<% end %>
+
+<div class="mb-4">
+  <h2 class="text-lg font-semibold mb-3">Pricing Terms</h2>
+  <% if @pricing_terms.empty? %>
+    <div class="alert alert-info text-sm">No pricing terms configured — standard pricing applies.</div>
+  <% else %>
+    <table class="table w-full max-w-xl">
+      <thead><tr><th>Brand</th><th>Category</th><th>Discount</th></tr></thead>
+      <tbody>
+        <% @pricing_terms.each do |term| %>
+          <tr>
+            <td><%= term.brand.presence || '— Any —' %></td>
+            <td><%= term.category.presence || '— Any —' %></td>
+            <td><%= term.discount_percentage %>%</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</div>

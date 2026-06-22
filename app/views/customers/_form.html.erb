@@ -1,0 +1,41 @@
+<%= form_with model: customer, class: 'space-y-4' do |f| %>
+  <% if customer.errors.any? %>
+    <div role="alert" class="alert alert-error">
+      <ul class="list-disc list-inside">
+        <% customer.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="form-control">
+      <%= f.label :name, class: 'label label-text font-medium' %>
+      <%= f.text_field :name, class: 'input input-bordered w-full', required: true %>
+    </div>
+    <div class="form-control">
+      <%= f.label :email, class: 'label label-text font-medium' %>
+      <%= f.email_field :email, class: 'input input-bordered w-full', required: true %>
+    </div>
+    <div class="form-control">
+      <%= f.label :phone, class: 'label label-text font-medium' %>
+      <%= f.telephone_field :phone, class: 'input input-bordered w-full' %>
+    </div>
+    <div class="form-control">
+      <%= f.label :company_id, 'Company', class: 'label label-text font-medium' %>
+      <%= f.collection_select :company_id, companies, :id, :name,
+            { include_blank: '— None —' }, class: 'select select-bordered w-full' %>
+    </div>
+  </div>
+
+  <div class="form-control">
+    <%= f.label :notes, class: 'label label-text font-medium' %>
+    <%= f.text_area :notes, rows: 3, class: 'textarea textarea-bordered w-full' %>
+  </div>
+
+  <div class="flex gap-3 pt-2">
+    <%= f.submit class: 'btn btn-primary' %>
+    <%= link_to 'Cancel', customers_path, class: 'btn btn-ghost' %>
+  </div>
+<% end %>

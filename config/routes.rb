@@ -174,6 +174,19 @@ Rails.application.routes.draw do
     resources :send_email, only: %i[create], controller: 'submitters_send_email'
   end
 
+  # Phase 2 — CRM
+  resources :companies
+  resources :customers
+
+  # Phase 2 — Customer portal (magic-link auth)
+  namespace :portal do
+    root 'dashboard#index'
+    get 'login', to: 'sessions#new', as: :login
+    post 'login', to: 'sessions#create'
+    get 'session', to: 'sessions#show', as: :session
+    delete 'signout', to: 'sessions#destroy', as: :signout
+  end
+
   scope '/settings', as: :settings do
     resources :ibcos, only: %i[index create], controller: 'ibcos_settings'
     unless Docuseal.multitenant?

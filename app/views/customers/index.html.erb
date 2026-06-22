@@ -1,0 +1,42 @@
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">Customers</h1>
+  <%= link_to 'New Customer', new_customer_path, class: 'btn btn-primary btn-sm' %>
+</div>
+
+<% if @customers.empty? %>
+  <div class="alert">No customers yet. <%= link_to 'Add the first one', new_customer_path %>.</div>
+<% else %>
+  <div class="overflow-x-auto">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Company</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @customers.each do |customer| %>
+          <tr>
+            <td><%= link_to customer.name, customer_path(customer), class: 'font-medium link link-hover' %></td>
+            <td><%= customer.email %></td>
+            <td><%= customer.phone %></td>
+            <td>
+              <% if customer.company %>
+                <%= link_to customer.company.name, company_path(customer.company), class: 'link link-hover' %>
+              <% end %>
+            </td>
+            <td class="text-right">
+              <%= link_to 'Edit', edit_customer_path(customer), class: 'btn btn-xs btn-ghost' %>
+              <%= button_to 'Delete', customer_path(customer), method: :delete,
+                    data: { confirm: 'Delete this customer?' },
+                    class: 'btn btn-xs btn-ghost text-error' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

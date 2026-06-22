@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="buxtons">
+  <head>
+    <%= render 'layouts/head_tags' %>
+    <title>Customer Portal · Buxtons Quote Tool</title>
+  </head>
+  <body class="min-h-screen bg-base-100">
+    <nav class="navbar bg-neutral text-neutral-content px-6 shadow">
+      <div class="flex-1">
+        <%= link_to portal_root_path, class: 'flex items-center gap-3 text-lg font-bold' do %>
+          <%= render 'shared/logo' %>
+          <span>Customer Portal</span>
+        <% end %>
+      </div>
+      <% if current_portal_customer %>
+        <div class="flex-none gap-3">
+          <span class="text-sm opacity-75"><%= current_portal_customer.name %></span>
+          <%= button_to 'Sign out', portal_signout_path, method: :delete,
+                class: 'btn btn-sm btn-ghost' %>
+        </div>
+      <% end %>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+      <% if notice.present? %>
+        <div role="alert" class="alert alert-success mb-6">
+          <span><%= notice %></span>
+        </div>
+      <% end %>
+      <% if alert.present? %>
+        <div role="alert" class="alert alert-error mb-6">
+          <span><%= alert %></span>
+        </div>
+      <% end %>
+
+      <%= yield %>
+    </main>
+  </body>
+</html>
