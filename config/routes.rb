@@ -178,6 +178,18 @@ Rails.application.routes.draw do
   resources :companies
   resources :customers
 
+  # Phase 3 — Product catalog
+  resources :products do
+    resources :product_options, only: %i[index create destroy]
+    resources :product_compatibility_rules, only: %i[index create destroy]
+  end
+
+  # Phase 3 — IBCOS Gold API endpoints
+  namespace :ibcos do
+    get 'search', to: 'search#index'
+    get 'quick', to: 'search#quick'
+  end
+
   # Phase 2 — Customer portal (magic-link auth)
   namespace :portal do
     root 'dashboard#index'

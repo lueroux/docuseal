@@ -25,6 +25,9 @@ class Ability
     can :manage, Company, account_id: user.account_id
     can :manage, Customer, account_id: user.account_id
     can :manage, CustomerPricingTerm, customer: { account_id: user.account_id }
+    can :manage, Product, account_id: user.account_id
+    can :manage, ProductOption, product: { account_id: user.account_id }
+    can :manage, ProductCompatibilityRule, product: { account_id: user.account_id }
 
     can :manage, :mcp
   end

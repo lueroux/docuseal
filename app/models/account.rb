@@ -23,6 +23,7 @@ class Account < ApplicationRecord
   has_many :users, dependent: :destroy
   has_many :companies, dependent: :destroy
   has_many :customers, dependent: :destroy
+  has_many :products, dependent: :destroy
   has_many :encrypted_configs, dependent: :destroy
   has_many :account_configs, dependent: :destroy
   has_many :email_messages, dependent: :destroy

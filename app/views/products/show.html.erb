@@ -1,0 +1,117 @@
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold"><%= @product.display_name %></h1>
+  <div class="flex gap-2">
+    <%= link_to 'Edit', edit_product_path(@product), class: 'btn btn-primary' %>
+    <%= button_to 'Delete', @product, method: :delete,
+        class: 'btn btn-error btn-ghost',
+        data: { turbo_confirm: 'Are you sure?' } %>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-2">
+    <div class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">Product Details</h2>
+        <div class="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <span class="font-semibold">SKU:</span>
+            <span class="ml-2"><%= @product.sku %></span>
+          </div>
+          <div>
+            <span class="font-semibold">Brand:</span>
+            <span class="ml-2"><%= @product.brand || 'N/A' %></span>
+          </div>
+          <div>
+            <span class="font-semibold">Category:</span>
+            <span class="ml-2"><%= @product.category || 'N/A' %></span>
+          </div>
+          <div>
+            <span class="font-semibold">Available:</span>
+            <span class="ml-2">
+              <%= content_tag :span, @product.available? ? 'Yes' : 'No',
+                  class: "badge #{@product.available? ? 'badge-success' : 'badge-error'}" %>
+            </span>
+          </div>
+        </div>
+
+        <% if @product.description.present? %>
+          <div class="mt-4">
+            <span class="font-semibold">Description:</span>
+            <p class="mt-2"><%= @product.description %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow mt-6">
+      <div class="card-body">
+        <h2 class="card-title">Pricing</h2>
+        <div class="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <span class="font-semibold">Cost Price:</span>
+            <span class="ml-2"><%= number_to_currency(@product.cost_price) if @product.cost_price %></span>
+          </div>
+          <div>
+            <span class="font-semibold">Markup:</span>
+            <span class="ml-2"><%= "#{@product.markup_percentage}%" if @product.markup_percentage %></span>
+          </div>
+          <div class="col-span-2">
+            <span class="font-semibold text-lg">Retail Price:</span>
+            <span class="ml-2 text-lg"><%= number_to_currency(@product.retail_price) %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">Product Options</h2>
+        <div class="mt-4">
+          <% if @product.product_options.any? %>
+            <ul class="menu bg-base-200 rounded-box">
+              <% @product.product_options.ordered.each do |option| %>
+                <li>
+                  <div class="flex justify-between">
+                    <span><%= option.name %></span>
+                    <span><%= number_to_currency(option.price) %></span>
+                  </div>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-sm opacity-70">No options configured</p>
+          <% end %>
+        </div>
+        <%= link_to 'Manage Options', product_product_options_path(@product), class: 'btn btn-sm btn-primary mt-4' %>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow mt-6">
+      <div class="card-body">
+        <h2 class="card-title">Compatibility Rules</h2>
+        <div class="mt-4">
+          <% if @product.product_compatibility_rules.any? %>
+            <ul class="menu bg-base-200 rounded-box">
+              <% @product.product_compatibility_rules.each do |rule| %>
+                <li>
+                  <div>
+                    <span class="badge badge-<%= rule.rule_type == 'requires' ? 'warning' : rule.rule_type == 'excludes' ? 'error' : 'info' %>">
+                      <%= rule.rule_type %>
+                    </span>
+                    <span class="ml-2"><%= rule.condition_value %></span>
+                  </div>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-sm opacity-70">No rules configured</p>
+          <% end %>
+        </div>
+        <%= link_to 'Manage Rules', product_product_compatibility_rules_path(@product), class: 'btn btn-sm btn-primary mt-4' %>
+      </div>
+    </div>
+  </div>
+</div>

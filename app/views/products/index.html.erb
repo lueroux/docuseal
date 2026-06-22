@@ -1,0 +1,44 @@
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-bold">Products</h1>
+  <%= link_to 'New Product', new_product_path, class: 'btn btn-primary' %>
+</div>
+
+<div class="card bg-base-100 shadow">
+  <div class="overflow-x-auto">
+    <table class="table table-zebra">
+      <thead>
+        <tr>
+          <th>SKU</th>
+          <th>Name</th>
+          <th>Brand</th>
+          <th>Category</th>
+          <th>Retail Price</th>
+          <th>Available</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @products.each do |product| %>
+          <tr>
+            <td><%= product.sku %></td>
+            <td><%= product.name %></td>
+            <td><%= product.brand %></td>
+            <td><%= product.category %></td>
+            <td><%= number_to_currency(product.retail_price) %></td>
+            <td>
+              <%= content_tag :span, product.available? ? 'Yes' : 'No',
+                  class: "badge #{product.available? ? 'badge-success' : 'badge-error'}" %>
+            </td>
+            <td>
+              <%= link_to 'View', product, class: 'btn btn-sm btn-ghost' %>
+              <%= link_to 'Edit', edit_product_path(product), class: 'btn btn-sm btn-ghost' %>
+              <%= button_to 'Delete', product, method: :delete,
+                  class: 'btn btn-sm btn-error btn-ghost',
+                  data: { turbo_confirm: 'Are you sure?' } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
