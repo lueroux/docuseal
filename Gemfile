@@ -19,6 +19,7 @@ gem 'dotenv', require: false
 gem 'email_typo'
 gem 'faraday'
 gem 'faraday-follow_redirects'
+gem 'nokogiri'
 gem 'google-cloud-storage', require: false
 gem 'hexapdf'
 gem 'jwt', require: false

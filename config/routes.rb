@@ -175,6 +175,7 @@ Rails.application.routes.draw do
   end
 
   scope '/settings', as: :settings do
+    resources :ibcos, only: %i[index create], controller: 'ibcos_settings'
     unless Docuseal.multitenant?
       resources :storage, only: %i[index create], controller: 'storage_settings'
       resources :search_entries_reindex, only: %i[create]

@@ -1,0 +1,61 @@
+<div class="flex flex-wrap space-y-4 md:flex-nowrap md:space-y-0">
+  <%= render 'shared/settings_nav' %>
+  <div class="flex-grow max-w-xl mx-auto">
+    <h1 class="text-4xl font-bold mb-2">IBCOS Gold</h1>
+    <p class="text-base-content/70 mb-6">
+      Connect to your IBCOS Gold Logic Server to enable live product search, pricing, and stock data in quotes.
+    </p>
+    <% value = @encrypted_config.value || {} %>
+    <%= form_for @encrypted_config, url: settings_ibcos_index_path, method: :post, html: { autocomplete: 'off', class: 'space-y-4' } do |f| %>
+      <%= f.fields_for :value do |ff| %>
+        <div class="form-control">
+          <%= ff.label :url, 'Logic Server URL', class: 'label' %>
+          <%= ff.url_field :url, value: value['url'], required: true,
+                           placeholder: 'http://ibcos-server:8080/api',
+                           class: 'base-input' %>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="form-control">
+            <%= ff.label :username, 'Username', class: 'label' %>
+            <%= ff.text_field :username, value: value['username'], required: true, class: 'base-input' %>
+          </div>
+          <div class="form-control">
+            <%= ff.label :password, 'Password', class: 'label' %>
+            <%= ff.password_field :password, class: 'base-input',
+                                  required: value['password'].blank?,
+                                  placeholder: value['password'].present? ? '••••••••••••' : '' %>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="form-control">
+            <%= ff.label :company, 'Company Code', class: 'label' %>
+            <%= ff.text_field :company, value: value['company'], required: true,
+                              placeholder: 'e.g. 01',
+                              class: 'base-input' %>
+          </div>
+          <div class="form-control">
+            <%= ff.label :depot, 'Depot Code', class: 'label' %>
+            <%= ff.text_field :depot, value: value['depot'], required: true,
+                              placeholder: 'e.g. 01',
+                              class: 'base-input' %>
+          </div>
+        </div>
+        <div class="form-control">
+          <%= ff.label :max_results, 'Max Search Results', class: 'label' %>
+          <%= ff.number_field :max_results, value: value.fetch('max_results', 25),
+                              min: 1, max: 200, class: 'base-input w-32' %>
+        </div>
+      <% end %>
+      <div class="alert alert-info text-sm" role="note">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 110 20A10 10 0 0112 2z"/>
+        </svg>
+        <span>Credentials are stored encrypted. The password field is only required when first saving or when you wish to change it.</span>
+      </div>
+      <div class="form-control pt-2">
+        <%= f.button button_title(title: 'Save IBCOS Settings', disabled_with: 'Saving…'), class: 'base-button' %>
+      </div>
+    <% end %>
+  </div>
+  <div class="w-0 md:w-52"></div>
+</div>
