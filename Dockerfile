@@ -78,6 +78,7 @@ COPY --chown=docuseal:docuseal ./log ./log
 COPY --chown=docuseal:docuseal ./lib ./lib
 COPY --chown=docuseal:docuseal ./public ./public
 COPY --chown=docuseal:docuseal ./tmp ./tmp
+RUN rm -rf /app/tmp/cache
 COPY --chown=docuseal:docuseal LICENSE LICENSE_ADDITIONAL_TERMS README.md Rakefile config.ru .version ./
 COPY --chown=docuseal:docuseal .version ./public/version
 
@@ -89,7 +90,7 @@ COPY --chown=docuseal:docuseal --from=webpack /app/public/packs ./public/packs
 
 RUN mkdir -p /app/public/fonts && ln -s /fonts/DancingScript-Regular.otf /app/public/fonts/ && \
     mkdir -p /usr/share/fonts/noto && ln -s /fonts/GoNotoKurrent-Regular.ttf /usr/share/fonts/noto/ && ln -s /fonts/GoNotoKurrent-Bold.ttf /usr/share/fonts/noto/ && fc-cache -f && \
-    bundle exec bootsnap precompile -j 1 --gemfile app/ lib/ && \
+    bundle exec bootsnap precompile -j 1 --gemfile lib/ && \
     chown -R docuseal:docuseal /app/tmp/cache
 
 WORKDIR /data/docuseal
