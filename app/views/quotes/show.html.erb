@@ -1,0 +1,125 @@
+<div class="container mx-auto px-4 py-6 max-w-4xl">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-4xl font-bold"><%= @quote.reference_number %></h1>
+    <div class="flex gap-2">
+      <%= link_to 'Edit', edit_quote_path(@quote), class: 'btn btn-primary' %>
+      <%= link_to 'Back to Quotes', quotes_path, class: 'btn btn-ghost' %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="stat bg-base-100 shadow">
+      <div class="stat-title">Status</div>
+      <div class="stat-value text-2xl">
+        <span class="badge badge-lg <%= case @quote.status
+          when 'draft' then 'badge-ghost'
+          when 'sent' then 'badge-info'
+          when 'viewed' then 'badge-primary'
+          when 'accepted' then 'badge-success'
+          when 'declined' then 'badge-error'
+          when 'expired' then 'badge-warning'
+          end %>">
+          <%= @quote.status.titleize %>
+        </span>
+      </div>
+    </div>
+
+    <div class="stat bg-base-100 shadow">
+      <div class="stat-title">Total</div>
+      <div class="stat-value">£<%= number_with_precision(@quote.total_price, precision: 2) %></div>
+    </div>
+
+    <div class="stat bg-base-100 shadow">
+      <div class="stat-title">Valid Until</div>
+      <div class="stat-value text-2xl"><%= @quote.valid_until&.strftime('%d/%m/%Y') || 'Not set' %></div>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body">
+      <h2 class="card-title">Customer</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <p class="text-sm text-base-content/70">Name</p>
+          <p class="font-semibold"><%= @quote.customer.name %></p>
+        </div>
+        <div>
+          <p class="text-sm text-base-content/70">Email</p>
+          <p class="font-semibold"><%= @quote.customer.email %></p>
+        </div>
+        <% if @quote.customer.phone.present? %>
+          <div>
+            <p class="text-sm text-base-content/70">Phone</p>
+            <p class="font-semibold"><%= @quote.customer.phone %></p>
+          </div>
+        <% end %>
+        <% if @quote.customer.company.present? %>
+          <div>
+            <p class="text-sm text-base-content/70">Company</p>
+            <p class="font-semibold"><%= @quote.customer.company.name %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <% if @quote.title.present? %>
+    <div class="card bg-base-100 shadow-xl mb-6">
+      <div class="card-body">
+        <h2 class="card-title"><%= @quote.title %></h2>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @quote.notes.present? %>
+    <div class="card bg-base-100 shadow-xl mb-6">
+      <div class="card-body">
+        <h2 class="card-title">Customer Notes</h2>
+        <p class="whitespace-pre-wrap"><%= @quote.notes %></p>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @quote.internal_notes.present? %>
+    <div class="card bg-base-100 shadow-xl mb-6 border-2 border-warning">
+      <div class="card-body">
+        <h2 class="card-title text-warning">Internal Notes</h2>
+        <p class="whitespace-pre-wrap"><%= @quote.internal_notes %></p>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title">Quote Details</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <p class="text-sm text-base-content/70">Created By</p>
+          <p class="font-semibold"><%= @quote.user.first_name %> <%= @quote.user.last_name %></p>
+        </div>
+        <div>
+          <p class="text-sm text-base-content/70">Created</p>
+          <p class="font-semibold"><%= @quote.created_at.strftime('%d/%m/%Y %H:%M') %></p>
+        </div>
+        <% if @quote.sent_at.present? %>
+          <div>
+            <p class="text-sm text-base-content/70">Sent</p>
+            <p class="font-semibold"><%= @quote.sent_at.strftime('%d/%m/%Y %H:%M') %></p>
+          </div>
+        <% end %>
+        <% if @quote.viewed_at.present? %>
+          <div>
+            <p class="text-sm text-base-content/70">Viewed</p>
+            <p class="font-semibold"><%= @quote.viewed_at.strftime('%d/%m/%Y %H:%M') %></p>
+          </div>
+        <% end %>
+        <% if @quote.signed_at.present? %>
+          <div>
+            <p class="text-sm text-base-content/70">Signed</p>
+            <p class="font-semibold"><%= @quote.signed_at.strftime('%d/%m/%Y %H:%M') %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

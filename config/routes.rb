@@ -190,6 +190,9 @@ Rails.application.routes.draw do
     get 'quick', to: 'search#quick'
   end
 
+  # Phase 4 — Quote builder
+  resources :quotes
+
   # Phase 2 — Customer portal (magic-link auth)
   namespace :portal do
     root 'dashboard#index'

@@ -1,0 +1,68 @@
+<div class="container mx-auto px-4 py-6 max-w-4xl">
+  <h1 class="text-4xl font-bold mb-6">Edit Quote: <%= @quote.reference_number %></h1>
+
+  <%= form_with model: @quote, local: true, class: 'space-y-6' do |f| %>
+    <% if @quote.errors.any? %>
+      <div class="alert alert-error">
+        <h3 class="font-bold">Please fix the following errors:</h3>
+        <ul class="list-disc list-inside">
+          <% @quote.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Customer Information</h2>
+        
+        <div class="form-control">
+          <%= f.label :customer_id, 'Customer', class: 'label' %>
+          <%= f.collection_select :customer_id, @customers, :id, :name, 
+              {}, 
+              { class: 'select select-bordered w-full', required: true } %>
+        </div>
+
+        <div class="form-control">
+          <%= f.label :title, 'Quote Title', class: 'label' %>
+          <%= f.text_field :title, class: 'input input-bordered w-full', 
+              placeholder: 'e.g., Office Equipment Quote' %>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-control">
+            <%= f.label :valid_until, 'Valid Until', class: 'label' %>
+            <%= f.date_field :valid_until, class: 'input input-bordered w-full' %>
+          </div>
+
+          <div class="form-control">
+            <%= f.label :status, 'Status', class: 'label' %>
+            <%= f.select :status, 
+                [['Draft', 'draft'], ['Sent', 'sent'], ['Viewed', 'viewed'], 
+                 ['Accepted', 'accepted'], ['Declined', 'declined'], ['Expired', 'expired']], 
+                {}, 
+                { class: 'select select-bordered w-full' } %>
+          </div>
+        </div>
+
+        <div class="form-control">
+          <%= f.label :notes, 'Customer Notes', class: 'label' %>
+          <%= f.text_area :notes, rows: 3, class: 'textarea textarea-bordered w-full',
+              placeholder: 'Notes visible to the customer' %>
+        </div>
+
+        <div class="form-control">
+          <%= f.label :internal_notes, 'Internal Notes', class: 'label' %>
+          <%= f.text_area :internal_notes, rows: 3, class: 'textarea textarea-bordered w-full',
+              placeholder: 'Internal notes (not visible to customer)' %>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <%= link_to 'Cancel', quote_path(@quote), class: 'btn btn-ghost' %>
+      <%= f.submit 'Update Quote', class: 'btn btn-primary' %>
+    </div>
+  <% end %>
+</div>

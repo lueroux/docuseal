@@ -4,6 +4,7 @@ class Customer < ApplicationRecord
   belongs_to :account
   belongs_to :company, optional: true
   has_many :customer_pricing_terms, dependent: :destroy
+  has_many :quotes, dependent: :destroy
 
   validates :name, presence: true
   validates :email, presence: true,
