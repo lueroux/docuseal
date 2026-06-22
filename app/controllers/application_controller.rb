@@ -18,6 +18,7 @@ class ApplicationController < ActionController::Base
   helper_method :button_title,
                 :current_account,
                 :true_ability,
+                :true_user,
                 :form_link_host,
                 :svg_icon
 
