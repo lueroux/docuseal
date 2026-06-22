@@ -11,7 +11,6 @@ class Product < ApplicationRecord
   validates :retail_price, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :cost_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :markup_percentage, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :option_type, inclusion: { in: %w[addon warranty bundle] }, allow_nil: true
 
   scope :available, -> { where(available: true) }
   scope :by_brand, ->(brand) { where(brand:) }
