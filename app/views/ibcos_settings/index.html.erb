@@ -6,7 +6,7 @@
       Connect to your IBCOS Gold Logic Server to enable live product search, pricing, and stock data in quotes.
     </p>
     <% value = @encrypted_config.value || {} %>
-    <%= form_for @encrypted_config, url: settings_ibcos_index_path, method: :post, html: { autocomplete: 'off', class: 'space-y-4' } do |f| %>
+    <%= form_for @encrypted_config, url: settings_ibcos_path, method: :post, html: { autocomplete: 'off', class: 'space-y-4' } do |f| %>
       <%= f.fields_for :value do |ff| %>
         <div class="form-control">
           <%= ff.label :url, 'Logic Server URL', class: 'label' %>

@@ -9,7 +9,7 @@ class IbcosSettingsController < ApplicationController
 
   def create
     if @encrypted_config.update(ibcos_config_params)
-      redirect_to settings_ibcos_index_path, notice: 'IBCOS Gold settings have been saved.'
+      redirect_to settings_ibcos_path, notice: 'IBCOS Gold settings have been saved.'
     else
       render :index, status: :unprocessable_content
     end
