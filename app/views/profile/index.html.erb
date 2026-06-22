@@ -55,10 +55,9 @@
     <a href="<%= edit_user_initials_path %>" data-turbo-frame="modal" class="base-button w-full">
       <%= t('update_initials') %>
     </a>
-    <% if true_user == current_user && !current_account.testing? %>
-      <p class="text-2xl font-bold mt-8 mb-4">
-        <%= t('change_password') %>
-      </p>
+    <p class="text-2xl font-bold mt-8 mb-4">
+      <%= t('change_password') %>
+    </p>
       <%= form_for current_user, url: update_password_settings_profile_index_path, method: :patch, html: { autocomplete: 'off' } do |f| %>
         <%= f.label :password, t('new_password'), class: 'label' %>
         <%= f.password_field :password, autocomplete: 'off', class: 'base-input peer w-full', required: true %>
@@ -104,7 +103,6 @@
           <a href="<%= new_mfa_setup_path %>" data-turbo-frame="modal" class="base-button w-full !px-8">🔒 <%= t('set_up_2fa') %></a>
         <% end %>
       </div>
-    <% end %>
   </div>
   <div class="w-0 md:w-52"></div>
 </div>
