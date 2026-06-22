@@ -22,7 +22,8 @@ class ApplicationController < ActionController::Base
                 :form_link_host,
                 :svg_icon
 
-  impersonates :user, with: ->(uuid) { User.find_by(uuid:) }
+  # Impersonation disabled for Buxtons Quote Tool
+  # impersonates :user, with: ->(uuid) { User.find_by(uuid:) }
 
   rescue_from Pagy::RangeError do
     redirect_to request.path
