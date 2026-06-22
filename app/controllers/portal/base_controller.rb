@@ -2,6 +2,8 @@
 
 module Portal
   class BaseController < ApplicationController
+    include PortalAuthentication
+
     skip_before_action :authenticate_user!
     skip_authorization_check
     before_action :authenticate_customer!
@@ -15,13 +17,5 @@ module Portal
 
       redirect_to portal_login_path, alert: 'Please sign in to access the portal.'
     end
-
-    def current_portal_customer
-      @current_portal_customer ||= begin
-        id = session[:portal_customer_id]
-        Customer.find_by(id:) if id
-      end
-    end
-    helper_method :current_portal_customer
   end
 end

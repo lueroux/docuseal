@@ -2,6 +2,8 @@
 
 module Portal
   class SessionsController < ApplicationController
+    include PortalAuthentication
+
     skip_before_action :authenticate_user!
     skip_authorization_check
     layout 'portal'
