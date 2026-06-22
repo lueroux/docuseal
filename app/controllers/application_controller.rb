@@ -100,6 +100,10 @@ class ApplicationController < ActionController::Base
     current_user&.account
   end
 
+  def true_user
+    current_user
+  end
+
   def true_ability
     @true_ability ||= Ability.new(true_user)
   end
