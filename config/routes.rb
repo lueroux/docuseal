@@ -191,7 +191,11 @@ Rails.application.routes.draw do
   end
 
   # Phase 4 — Quote builder
-  resources :quotes
+  resources :quotes do
+    member do
+      get :document
+    end
+  end
 
   # Phase 2 — Customer portal (magic-link auth)
   namespace :portal do

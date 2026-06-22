@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class QuotesController < ApplicationController
-  before_action :set_quote, only: %i[show edit update destroy]
+  before_action :set_quote, only: %i[show edit update destroy document]
   authorize_resource
 
   def index
@@ -9,6 +9,21 @@ class QuotesController < ApplicationController
   end
 
   def show
+    respond_to do |format|
+      format.html
+      format.pdf do
+        pdf_generator = QuotePdfGenerator.new(@quote)
+        send_data pdf_generator.generate,
+                  filename: "quote-#{@quote.reference_number}.pdf",
+                  type: 'application/pdf',
+                  disposition: 'inline'
+      end
+    end
+  end
+
+  def document
+    @document_html = QuoteDocumentBuilder.new(@quote).build_html
+    render layout: 'quote_document'
   end
 
   def new
