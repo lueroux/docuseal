@@ -1,8 +1,16 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="buxtons">
   <head>
+    <% content_for(:html_title, 'Customer Portal · Buxtons Quote Tool') %>
     <%= render 'layouts/head_tags' %>
-    <title>Customer Portal · Buxtons Quote Tool</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <%= csrf_meta_tags %>
+    <% if ENV['ROLLBAR_CLIENT_TOKEN'] %>
+      <%= javascript_pack_tag 'rollbar', 'application', defer: true %>
+    <% else %>
+      <%= javascript_pack_tag 'application', defer: true %>
+    <% end %>
+    <%= stylesheet_pack_tag 'application', media: 'all' %>
   </head>
   <body class="min-h-screen bg-base-100">
     <nav class="navbar bg-neutral text-neutral-content px-6 shadow">
