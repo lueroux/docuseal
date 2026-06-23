@@ -81,21 +81,32 @@ class IbcosGoldService
     xml_content = File.read(XML_FILE_PATH)
     doc = Nokogiri::XML(xml_content)
     
-    # Parse all parts from XML
-    doc.xpath('//Part').map do |part|
+    if doc.errors.any?
+      Rails.logger.error "XML parsing errors: #{doc.errors.map(&:message).join(', ')}"
+    end
+    
+    # Parse all parts from XML (try both lowercase and uppercase)
+    parts = doc.xpath('//part | //Part').map do |part|
       parse_part_node(part)
     end
+    
+    Rails.logger.info "Loaded #{parts.size} parts from IBCOS XML"
+    parts
+  rescue StandardError => e
+    Rails.logger.error "Error loading IBCOS parts: #{e.class} - #{e.message}"
+    Rails.logger.error e.backtrace.first(5).join("\n")
+    []
   end
 
   def self.parse_part_node(node)
     {
-      sku: node.at_xpath('PartNo')&.text || node.at_xpath('StockCode')&.text,
-      name: node.at_xpath('Description')&.text || node.at_xpath('Name')&.text,
-      brand: node.at_xpath('Brand')&.text || node.at_xpath('Manufacturer')&.text,
-      category: node.at_xpath('Category')&.text || node.at_xpath('Group')&.text,
-      retail_price: parse_decimal(node.at_xpath('Price')&.text || node.at_xpath('RetailPrice')&.text),
-      cost_price: parse_decimal(node.at_xpath('Cost')&.text || node.at_xpath('CostPrice')&.text),
-      stock: (node.at_xpath('Stock')&.text || node.at_xpath('Quantity')&.text)&.to_i || 0
+      sku: node['partnumber'] || node['stockcode'],
+      name: node['description'] || node['name'],
+      brand: node['brand'] || node['manufacturer'],
+      category: node['productgroup'] || node['classcode'] || node['category'],
+      retail_price: parse_decimal(node['retailprice'] || node['price']),
+      cost_price: parse_decimal(node['dealernet'] || node['averageprice'] || node['cost']),
+      stock: (node['freestock'] || node['stock'] || node['quantity'])&.to_i || 0
     }
   end
 
