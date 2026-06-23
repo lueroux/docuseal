@@ -1,0 +1,15 @@
+<div id="quote_total" class="card bg-primary text-primary-content">
+  <div class="card-body p-4">
+    <div class="flex justify-between items-center">
+      <div>
+        <div class="text-sm opacity-90">Quote Total</div>
+        <div class="text-3xl font-bold">
+          £<%= number_with_precision(quote.calculate_total, precision: 2, delimiter: ',') %>
+        </div>
+      </div>
+      <div class="text-right text-sm opacity-90">
+        <%= pluralize(quote.quote_items.count, 'product') %>
+      </div>
+    </div>
+  </div>
+</div>

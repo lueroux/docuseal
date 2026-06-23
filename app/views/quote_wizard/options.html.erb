@@ -1,0 +1,105 @@
+<%= render 'quote_wizard/layout' do %>
+  <h2 class="text-2xl font-bold mb-6">Configure Product Options</h2>
+
+  <% if @quote_items.any? %>
+    <div class="space-y-6">
+      <% @quote_items.each do |quote_item| %>
+        <% product_options = @product_options[quote_item.id] || [] %>
+        
+        <div class="card bg-base-100 border border-base-300">
+          <div class="card-body">
+            <h3 class="text-lg font-semibold mb-4">
+              <%= quote_item.product.name %>
+              <span class="text-sm font-normal text-base-content/70">(SKU: <%= quote_item.product.sku %>)</span>
+            </h3>
+
+            <% if product_options.any? %>
+              <%= form_with model: quote_item, url: update_item_quote_wizard_path(@quote, item_id: quote_item.id),
+                  method: :patch, data: { turbo_frame: "quote_item_options_#{quote_item.id}" } do |f| %>
+                
+                <div class="space-y-4">
+                  <% product_options.each do |option| %>
+                    <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
+                      <div class="flex items-center gap-3">
+                        <input type="checkbox" 
+                               name="quote_item[option_ids][]" 
+                               value="<%= option.id %>"
+                               <%= 'checked' if quote_item.quote_item_options.exists?(product_option_id: option.id, is_selected: true) %>
+                               class="checkbox checkbox-primary"
+                               data-action="change->form#submit">
+                        
+                        <div>
+                          <div class="font-medium"><%= option.name %></div>
+                          <% if option.description.present? %>
+                            <div class="text-sm text-base-content/70"><%= option.description %></div>
+                          <% end %>
+                        </div>
+                      </div>
+
+                      <div class="text-right">
+                        <div class="font-bold">
+                          <% if option.price > 0 %>
+                            +£<%= number_with_precision(option.price, precision: 2, delimiter: ',') %>
+                          <% else %>
+                            Included
+                          <% end %>
+                        </div>
+                        <% if option.affects_compatibility %>
+                          <div class="badge badge-sm badge-warning">Affects Compatibility</div>
+                        <% end %>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+
+                <turbo-frame id="quote_item_options_<%= quote_item.id %>"></turbo-frame>
+              <% end %>
+
+              <!-- Options Total -->
+              <% options_total = quote_item.options_total %>
+              <% if options_total > 0 %>
+                <div class="mt-4 pt-4 border-t border-base-300 flex justify-between items-center">
+                  <span class="font-semibold">Options Total:</span>
+                  <span class="text-lg font-bold">
+                    +£<%= number_with_precision(options_total, precision: 2, delimiter: ',') %>
+                  </span>
+                </div>
+              <% end %>
+            <% else %>
+              <div class="text-center py-8 text-base-content/70">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p>No options available for this product</p>
+              </div>
+            <% end %>
+
+            <!-- Item Notes -->
+            <%= form_with model: quote_item, url: update_item_quote_wizard_path(@quote, item_id: quote_item.id),
+                method: :patch, class: 'mt-4' do |f| %>
+              <div class="form-control">
+                <%= f.label :notes, 'Product Notes (Optional)', class: 'label' %>
+                <%= f.text_area :notes, rows: 2, class: 'textarea textarea-bordered',
+                    placeholder: 'Add specific notes for this product...',
+                    data: { action: 'blur->form#submit' } %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Total Summary -->
+    <div class="mt-6">
+      <%= render 'quote_wizard/quote_total', quote: @quote %>
+    </div>
+  <% else %>
+    <div class="text-center py-12 bg-base-200 rounded-lg">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto text-base-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+      </svg>
+      <p class="text-xl text-base-content/70 mb-2">No products in quote</p>
+      <p class="text-sm text-base-content/50">Go back to add products first</p>
+    </div>
+  <% end %>
+<% end %>

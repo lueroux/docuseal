@@ -1,0 +1,208 @@
+<%= render 'quote_wizard/layout' do %>
+  <h2 class="text-2xl font-bold mb-6">Add Products</h2>
+
+  <div id="compatibility_alerts" class="space-y-2 mb-4"></div>
+
+  <!-- Product Search and Add Section -->
+  <div class="card bg-base-200 mb-6">
+    <div class="card-body">
+      <h3 class="text-lg font-semibold mb-4">Search & Add Products</h3>
+      
+      <div class="tabs tabs-boxed mb-4">
+        <a class="tab tab-active" data-tab="catalog">From Catalog</a>
+        <a class="tab" data-tab="ibcos">Search IBCOS</a>
+        <a class="tab" data-tab="new">Create New</a>
+      </div>
+
+      <!-- Tab: From Catalog -->
+      <div id="tab_catalog" class="tab-content">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Search Products</span>
+          </label>
+          <div class="flex gap-2">
+            <input type="text" id="product_search" 
+                   placeholder="Search by name, SKU, or brand..." 
+                   class="input input-bordered flex-1"
+                   data-controller="product-search"
+                   data-action="input->product-search#search">
+            
+            <select id="product_select" class="select select-bordered w-64">
+              <option value="">Select a product</option>
+              <% @products.each do |product| %>
+                <option value="<%= product.id %>" 
+                        data-name="<%= product.name %>"
+                        data-sku="<%= product.sku %>"
+                        data-brand="<%= product.brand %>">
+                  <%= product.sku %> - <%= product.name %>
+                </option>
+              <% end %>
+            </select>
+
+            <%= button_to 'Add Product', add_item_quote_wizard_path(@quote), 
+                method: :post,
+                params: { product_id: '', quantity: 1 },
+                form: { id: 'add_product_form', data: { turbo_frame: 'quote_items_list' } },
+                class: 'btn btn-primary',
+                disabled: true,
+                id: 'add_product_btn' %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Search IBCOS -->
+      <div id="tab_ibcos" class="tab-content hidden">
+        <ibcos-lookup class="form-control">
+          <label class="label">
+            <span class="label-text">Product SKU</span>
+          </label>
+          <div class="flex gap-2">
+            <input type="text" 
+                   id="ibcos_sku" 
+                   placeholder="Enter SKU (e.g., ZH-970749901)" 
+                   class="input input-bordered flex-1"
+                   data-sku>
+            
+            <button type="button" class="btn btn-secondary" data-button>
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Search IBCOS
+            </button>
+          </div>
+          <div class="text-sm mt-1" data-status></div>
+        </ibcos-lookup>
+
+        <!-- IBCOS Result Display -->
+        <div id="ibcos_result" class="mt-4 hidden">
+          <div class="alert alert-success">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h4 class="font-bold" id="ibcos_product_name"></h4>
+              <div class="text-sm">
+                <span id="ibcos_product_brand"></span> | 
+                Retail: £<span id="ibcos_retail_price"></span> | 
+                Cost: £<span id="ibcos_cost_price"></span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex gap-2 mt-4">
+            <button type="button" class="btn btn-primary" id="add_ibcos_product">
+              Add to Quote
+            </button>
+            <button type="button" class="btn btn-secondary" id="save_ibcos_product">
+              Save to Catalog & Add
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Create New Product -->
+      <div id="tab_new" class="tab-content hidden">
+        <%= form_with model: Product.new, url: products_path, 
+            data: { turbo_frame: 'new_product_result' } do |pf| %>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <%= pf.label :sku, class: 'label' %>
+              <%= pf.text_field :sku, class: 'input input-bordered', required: true %>
+            </div>
+
+            <div class="form-control">
+              <%= pf.label :name, class: 'label' %>
+              <%= pf.text_field :name, class: 'input input-bordered', required: true %>
+            </div>
+
+            <div class="form-control">
+              <%= pf.label :brand, class: 'label' %>
+              <%= pf.text_field :brand, class: 'input input-bordered' %>
+            </div>
+
+            <div class="form-control">
+              <%= pf.label :category, class: 'label' %>
+              <%= pf.text_field :category, class: 'input input-bordered' %>
+            </div>
+
+            <div class="form-control">
+              <%= pf.label :retail_price, class: 'label' %>
+              <%= pf.number_field :retail_price, step: 0.01, class: 'input input-bordered', required: true %>
+            </div>
+
+            <div class="form-control">
+              <%= pf.label :cost_price, class: 'label' %>
+              <%= pf.number_field :cost_price, step: 0.01, class: 'input input-bordered' %>
+            </div>
+          </div>
+
+          <turbo-frame id="new_product_result"></turbo-frame>
+
+          <div class="flex justify-end gap-2 mt-4">
+            <%= pf.submit 'Create & Add to Quote', class: 'btn btn-primary' %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quote Items List -->
+  <div class="mb-6">
+    <h3 class="text-lg font-semibold mb-4">Products in Quote</h3>
+    
+    <% if @quote_items.any? %>
+      <div id="quote_items_list" class="space-y-3">
+        <% @quote_items.each do |quote_item| %>
+          <%= render 'quote_wizard/quote_item', quote_item: quote_item %>
+        <% end %>
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <%= render 'quote_wizard/quote_total', quote: @quote %>
+      </div>
+    <% else %>
+      <div id="quote_items_list" class="text-center py-12 bg-base-200 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto text-base-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+        </svg>
+        <p class="text-xl text-base-content/70">No products added yet</p>
+        <p class="text-sm text-base-content/50 mt-2">Search and add products to get started</p>
+      </div>
+    <% end %>
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('[data-tab]').forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tabName = tab.dataset.tab;
+        
+        // Update tab active state
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-active'));
+        tab.classList.add('tab-active');
+        
+        // Show/hide content
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.add('hidden');
+        });
+        document.getElementById(`tab_${tabName}`).classList.remove('hidden');
+      });
+    });
+
+    // Product selection
+    const productSelect = document.getElementById('product_select');
+    const addBtn = document.getElementById('add_product_btn');
+    const addForm = document.getElementById('add_product_form');
+
+    productSelect.addEventListener('change', () => {
+      if (productSelect.value) {
+        addBtn.disabled = false;
+        addForm.action = addForm.action.replace(/product_id=[^&]*/, `product_id=${productSelect.value}`);
+      } else {
+        addBtn.disabled = true;
+      }
+    });
+  </script>
+<% end %>

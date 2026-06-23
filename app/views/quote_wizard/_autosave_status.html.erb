@@ -1,0 +1,20 @@
+<% if local_assigns[:saved] %>
+  <span class="flex items-center gap-1 text-success">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+    </svg>
+    Saved
+  </span>
+<% elsif local_assigns[:errors] %>
+  <span class="flex items-center gap-1 text-error">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+    Error saving
+  </span>
+<% else %>
+  <span class="flex items-center gap-1">
+    <span class="loading loading-spinner loading-xs"></span>
+    Saving...
+  </span>
+<% end %>

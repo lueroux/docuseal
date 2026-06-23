@@ -1,0 +1,129 @@
+<%= render 'quote_wizard/layout' do %>
+  <h2 class="text-2xl font-bold mb-6">Review Pricing</h2>
+
+  <% if @quote_items.any? %>
+    <div class="space-y-4 mb-6">
+      <% @quote_items.each do |quote_item| %>
+        <div class="card bg-base-100 border border-base-300">
+          <div class="card-body p-4">
+            <%= form_with model: quote_item, url: update_item_quote_wizard_path(@quote, item_id: quote_item.id),
+                method: :patch, data: { turbo_frame: "quote_item_#{quote_item.id}" } do |f| %>
+              
+              <div class="flex items-center justify-between gap-4">
+                <!-- Product Info -->
+                <div class="flex-1">
+                  <h4 class="font-semibold"><%= quote_item.product.name %></h4>
+                  <div class="text-sm text-base-content/70">
+                    SKU: <%= quote_item.product.sku %> | Qty: <%= quote_item.quantity %>
+                  </div>
+                </div>
+
+                <!-- Pricing Grid -->
+                <div class="grid grid-cols-4 gap-3 items-end">
+                  <div class="form-control">
+                    <label class="label label-text text-xs">Cost Price</label>
+                    <div class="input input-bordered input-sm bg-base-200 flex items-center">
+                      £<%= number_with_precision(quote_item.cost_price, precision: 2) %>
+                    </div>
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label label-text text-xs">Retail Price</label>
+                    <div class="input input-bordered input-sm bg-base-200 flex items-center">
+                      £<%= number_with_precision(quote_item.retail_price, precision: 2) %>
+                    </div>
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label label-text text-xs">Quoted Price</label>
+                    <div class="input-group input-group-sm">
+                      <span>£</span>
+                      <%= f.number_field :quoted_price, step: 0.01, 
+                          class: 'input input-bordered input-sm w-28',
+                          data: { action: 'change->form#submit' } %>
+                    </div>
+                  </div>
+
+                  <div class="form-control">
+                    <label class="label label-text text-xs">Discount %</label>
+                    <%= f.number_field :discount_percentage, min: 0, max: 100, step: 0.1,
+                        class: 'input input-bordered input-sm w-20',
+                        data: { action: 'change->form#submit' } %>
+                  </div>
+                </div>
+
+                <!-- Line Total -->
+                <div class="text-right min-w-[120px]">
+                  <div class="text-xs text-base-content/70">Line Total</div>
+                  <div class="text-xl font-bold">
+                    £<%= number_with_precision(quote_item.total_with_options, precision: 2, delimiter: ',') %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Margin Indicator -->
+              <% margin = ((quote_item.quoted_price - quote_item.cost_price) / quote_item.cost_price * 100).round(1) rescue 0 %>
+              <div class="mt-2 flex items-center gap-2">
+                <div class="text-xs text-base-content/70">Margin:</div>
+                <div class="badge <%= margin >= 30 ? 'badge-success' : margin >= 15 ? 'badge-warning' : 'badge-error' %>">
+                  <%= margin %>%
+                </div>
+                <% if quote_item.options_total > 0 %>
+                  <div class="text-xs text-base-content/70">
+                    (includes £<%= number_with_precision(quote_item.options_total, precision: 2) %> in options)
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Pricing Summary -->
+    <div class="card bg-base-200">
+      <div class="card-body">
+        <h3 class="text-lg font-semibold mb-4">Pricing Summary</h3>
+        
+        <div class="space-y-2">
+          <div class="flex justify-between">
+            <span>Subtotal:</span>
+            <span class="font-mono">£<%= number_with_precision(@quote.calculate_total, precision: 2, delimiter: ',') %></span>
+          </div>
+          
+          <% total_cost = @quote_items.sum { |item| item.cost_price * item.quantity } %>
+          <% total_retail = @quote_items.sum { |item| item.retail_price * item.quantity } %>
+          <% overall_margin = (((@quote.calculate_total - total_cost) / total_cost) * 100).round(1) rescue 0 %>
+          
+          <div class="flex justify-between text-sm text-base-content/70">
+            <span>Total Cost:</span>
+            <span class="font-mono">£<%= number_with_precision(total_cost, precision: 2, delimiter: ',') %></span>
+          </div>
+          
+          <div class="flex justify-between text-sm text-base-content/70">
+            <span>Total Retail:</span>
+            <span class="font-mono">£<%= number_with_precision(total_retail, precision: 2, delimiter: ',') %></span>
+          </div>
+          
+          <div class="divider my-2"></div>
+          
+          <div class="flex justify-between items-center">
+            <span class="font-semibold">Overall Margin:</span>
+            <div class="badge badge-lg <%= overall_margin >= 30 ? 'badge-success' : overall_margin >= 15 ? 'badge-warning' : 'badge-error' %>">
+              <%= overall_margin %>%
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quote Total -->
+    <div class="mt-6">
+      <%= render 'quote_wizard/quote_total', quote: @quote %>
+    </div>
+  <% else %>
+    <div class="text-center py-12 bg-base-200 rounded-lg">
+      <p class="text-xl text-base-content/70">No products to price</p>
+    </div>
+  <% end %>
+<% end %>

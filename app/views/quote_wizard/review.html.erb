@@ -1,0 +1,159 @@
+<%= render 'quote_wizard/layout' do %>
+  <h2 class="text-2xl font-bold mb-6">Review & Finalize</h2>
+
+  <!-- Customer Info -->
+  <div class="card bg-base-100 border border-base-300 mb-6">
+    <div class="card-body">
+      <h3 class="text-lg font-semibold mb-4">Customer Information</h3>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <div class="text-sm text-base-content/70">Customer</div>
+          <div class="font-semibold"><%= @quote.customer.name %></div>
+        </div>
+        
+        <div>
+          <div class="text-sm text-base-content/70">Email</div>
+          <div><%= @quote.customer.email %></div>
+        </div>
+        
+        <% if @quote.customer.phone.present? %>
+          <div>
+            <div class="text-sm text-base-content/70">Phone</div>
+            <div><%= @quote.customer.phone %></div>
+          </div>
+        <% end %>
+        
+        <div>
+          <div class="text-sm text-base-content/70">Valid Until</div>
+          <div><%= @quote.valid_until&.strftime('%d/%m/%Y') || 'Not set' %></div>
+        </div>
+      </div>
+
+      <% if @quote.title.present? %>
+        <div class="mt-4">
+          <div class="text-sm text-base-content/70">Quote Title</div>
+          <div class="font-semibold"><%= @quote.title %></div>
+        </div>
+      <% end %>
+
+      <% if @quote.notes.present? %>
+        <div class="mt-4">
+          <div class="text-sm text-base-content/70">Customer Notes</div>
+          <div class="text-sm"><%= simple_format(@quote.notes) %></div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Products Summary -->
+  <div class="card bg-base-100 border border-base-300 mb-6">
+    <div class="card-body">
+      <h3 class="text-lg font-semibold mb-4">Products (<%= pluralize(@quote_items.count, 'item') %>)</h3>
+      
+      <div class="overflow-x-auto">
+        <table class="table table-zebra">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="text-center">Qty</th>
+              <th class="text-right">Unit Price</th>
+              <th class="text-right">Options</th>
+              <th class="text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @quote_items.each do |item| %>
+              <tr>
+                <td>
+                  <div class="font-semibold"><%= item.product.name %></div>
+                  <div class="text-sm text-base-content/70">
+                    <%= item.product.sku %>
+                    <% if item.product.brand.present? %>
+                      | <%= item.product.brand %>
+                    <% end %>
+                  </div>
+                  <% if item.notes.present? %>
+                    <div class="text-xs text-base-content/60 mt-1">
+                      <strong>Note:</strong> <%= item.notes %>
+                    </div>
+                  <% end %>
+                </td>
+                <td class="text-center"><%= item.quantity %></td>
+                <td class="text-right font-mono">£<%= number_with_precision(item.quoted_price, precision: 2) %></td>
+                <td class="text-right font-mono">
+                  <% if item.options_total > 0 %>
+                    +£<%= number_with_precision(item.options_total, precision: 2) %>
+                  <% else %>
+                    -
+                  <% end %>
+                </td>
+                <td class="text-right font-mono font-semibold">
+                  £<%= number_with_precision(item.total_with_options, precision: 2, delimiter: ',') %>
+                </td>
+              </tr>
+              
+              <% if item.quote_item_options.where(is_selected: true).any? %>
+                <tr class="bg-base-200/50">
+                  <td colspan="5" class="text-sm">
+                    <div class="pl-4">
+                      <strong>Options:</strong>
+                      <%= item.quote_item_options.where(is_selected: true).map(&:name).join(', ') %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            <% end %>
+          </tbody>
+          <tfoot>
+            <tr class="font-bold">
+              <td colspan="4" class="text-right">Total:</td>
+              <td class="text-right font-mono text-lg">
+                £<%= number_with_precision(@quote.calculate_total, precision: 2, delimiter: ',') %>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="card bg-primary text-primary-content">
+    <div class="card-body">
+      <h3 class="text-lg font-semibold mb-4">Next Steps</h3>
+      
+      <div class="space-y-3">
+        <div class="flex items-start gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <div class="font-semibold">Finalize Quote</div>
+            <div class="text-sm opacity-90">Save this quote as a draft. You can edit it later before sending.</div>
+          </div>
+        </div>
+        
+        <div class="flex items-start gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <div>
+            <div class="font-semibold">Send to Customer</div>
+            <div class="text-sm opacity-90">After finalizing, you can send the quote to your customer for review and signature.</div>
+          </div>
+        </div>
+        
+        <div class="flex items-start gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <div>
+            <div class="font-semibold">Generate PDF</div>
+            <div class="text-sm opacity-90">Download a professional PDF version of the quote with product specs and terms.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>

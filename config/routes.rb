@@ -201,6 +201,15 @@ Rails.application.routes.draw do
     resources :quote_items, only: %i[create update destroy]
   end
 
+  # Quote wizard (multi-step quote creation)
+  get 'quotes/new', to: 'quote_wizard#show', as: :new_quote_wizard
+  get 'quotes/:id/wizard', to: 'quote_wizard#show', as: :quote_wizard
+  patch 'quotes/:id/wizard', to: 'quote_wizard#update'
+  post 'quotes/:id/wizard/add_item', to: 'quote_wizard#add_item', as: :add_item_quote_wizard
+  patch 'quotes/:id/wizard/update_item/:item_id', to: 'quote_wizard#update_item', as: :update_item_quote_wizard
+  delete 'quotes/:id/wizard/remove_item/:item_id', to: 'quote_wizard#remove_item', as: :remove_item_quote_wizard
+  post 'quotes/:id/wizard/finalize', to: 'quote_wizard#finalize', as: :finalize_quote_wizard
+
   # Phase 2 — Customer portal (magic-link auth)
   namespace :portal do
     root 'dashboard#index'

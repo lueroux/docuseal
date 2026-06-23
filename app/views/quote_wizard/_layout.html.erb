@@ -1,0 +1,74 @@
+<div class="container mx-auto px-4 py-6 max-w-6xl">
+  <!-- Progress Bar -->
+  <div class="mb-8">
+    <div class="flex justify-between items-center mb-2">
+      <h1 class="text-3xl font-bold">
+        <%= @quote.persisted? && @quote.reference_number.present? ? "Quote #{@quote.reference_number}" : "New Quote" %>
+      </h1>
+      <div id="autosave_status" class="text-sm text-base-content/70">
+        <%= render 'quote_wizard/autosave_status', saved: true %>
+      </div>
+    </div>
+
+    <!-- Step Progress -->
+    <div class="flex items-center gap-2 mb-4">
+      <% QuoteWizardController::STEPS.each_with_index do |step, index| %>
+        <% is_current = step == @current_step %>
+        <% is_completed = index < @step_index %>
+        
+        <div class="flex items-center <%= 'flex-1' unless index == QuoteWizardController::STEPS.length - 1 %>">
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center font-semibold
+                        <%= is_current ? 'bg-primary text-primary-content' : is_completed ? 'bg-success text-success-content' : 'bg-base-300 text-base-content/50' %>">
+              <% if is_completed %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              <% else %>
+                <%= index + 1 %>
+              <% end %>
+            </div>
+            <span class="text-sm font-medium <%= is_current ? 'text-primary' : is_completed ? 'text-success' : 'text-base-content/50' %>">
+              <%= step.titleize %>
+            </span>
+          </div>
+          
+          <% unless index == QuoteWizardController::STEPS.length - 1 %>
+            <div class="flex-1 h-1 mx-2 <%= is_completed ? 'bg-success' : 'bg-base-300' %>"></div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="w-full bg-base-300 rounded-full h-2">
+      <div class="bg-primary h-2 rounded-full transition-all duration-300" style="width: <%= @progress_percentage %>%"></div>
+    </div>
+  </div>
+
+  <!-- Step Content -->
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <%= yield %>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="flex justify-between items-center mt-6">
+    <% if @step_index > 0 %>
+      <%= link_to 'Previous', quote_wizard_path(@quote, step: QuoteWizardController::STEPS[@step_index - 1]), 
+          class: 'btn btn-ghost' %>
+    <% else %>
+      <%= link_to 'Cancel', quotes_path, class: 'btn btn-ghost', 
+          data: { turbo_confirm: 'Are you sure? Your progress will be lost.' } %>
+    <% end %>
+
+    <% if @step_index < QuoteWizardController::STEPS.length - 1 %>
+      <%= link_to 'Next', quote_wizard_path(@quote, step: QuoteWizardController::STEPS[@step_index + 1]), 
+          class: 'btn btn-primary' %>
+    <% else %>
+      <%= button_to 'Finalize Quote', finalize_quote_wizard_path(@quote), 
+          method: :post, class: 'btn btn-primary' %>
+    <% end %>
+  </div>
+</div>

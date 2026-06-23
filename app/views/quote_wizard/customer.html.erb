@@ -1,0 +1,116 @@
+<%= render 'quote_wizard/layout' do %>
+  <h2 class="text-2xl font-bold mb-6">Select Customer</h2>
+
+  <%= form_with model: @quote, url: quote_wizard_path(@quote, step: 'customer'), 
+      method: :patch, data: { controller: 'autosave', autosave_target: 'form' } do |f| %>
+    
+    <div class="space-y-6">
+      <!-- Customer Selection -->
+      <div class="form-control">
+        <%= f.label :customer_id, 'Customer', class: 'label' %>
+        <div class="flex gap-2">
+          <%= f.collection_select :customer_id, @customers, :id, :name, 
+              { prompt: 'Select a customer', selected: @quote.customer_id }, 
+              { class: 'select select-bordered flex-1', required: true,
+                data: { action: 'change->autosave#save' } } %>
+          
+          <button type="button" class="btn btn-secondary" 
+                  onclick="document.getElementById('new_customer_modal').showModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            New Customer
+          </button>
+        </div>
+      </div>
+
+      <!-- Quote Details -->
+      <div class="form-control">
+        <%= f.label :title, 'Quote Title (Optional)', class: 'label' %>
+        <%= f.text_field :title, class: 'input input-bordered w-full', 
+            placeholder: 'e.g., Husqvarna Ceora Package',
+            data: { action: 'blur->autosave#save' } %>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :valid_until, 'Valid Until', class: 'label' %>
+          <%= f.date_field :valid_until, class: 'input input-bordered w-full',
+              value: @quote.valid_until || 30.days.from_now.to_date,
+              data: { action: 'change->autosave#save' } %>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-control">
+        <%= f.label :notes, 'Customer Notes', class: 'label' %>
+        <span class="label-text-alt text-base-content/70 mb-2">These notes will be visible to the customer</span>
+        <%= f.text_area :notes, rows: 3, class: 'textarea textarea-bordered w-full',
+            placeholder: 'Add any notes for the customer...',
+            data: { action: 'blur->autosave#save' } %>
+      </div>
+
+      <div class="form-control">
+        <%= f.label :internal_notes, 'Internal Notes', class: 'label' %>
+        <span class="label-text-alt text-base-content/70 mb-2">These notes are only visible to staff</span>
+        <%= f.text_area :internal_notes, rows: 3, class: 'textarea textarea-bordered w-full',
+            placeholder: 'Add internal notes...',
+            data: { action: 'blur->autosave#save' } %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- New Customer Modal -->
+  <dialog id="new_customer_modal" class="modal">
+    <div class="modal-box w-11/12 max-w-2xl">
+      <h3 class="font-bold text-lg mb-4">Add New Customer</h3>
+      
+      <%= form_with model: Customer.new, url: customers_path, 
+          data: { turbo_frame: 'customer_form_result' } do |cf| %>
+        
+        <div class="space-y-4">
+          <div class="form-control">
+            <%= cf.label :name, class: 'label' %>
+            <%= cf.text_field :name, class: 'input input-bordered w-full', required: true %>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <%= cf.label :email, class: 'label' %>
+              <%= cf.email_field :email, class: 'input input-bordered w-full', required: true %>
+            </div>
+
+            <div class="form-control">
+              <%= cf.label :phone, class: 'label' %>
+              <%= cf.text_field :phone, class: 'input input-bordered w-full' %>
+            </div>
+          </div>
+
+          <div class="form-control">
+            <%= cf.label :company_id, 'Company (Optional)', class: 'label' %>
+            <%= cf.collection_select :company_id, Company.where(account: current_account).order(:name), 
+                :id, :name, { prompt: 'Select a company' }, 
+                { class: 'select select-bordered w-full' } %>
+          </div>
+
+          <div class="form-control">
+            <%= cf.label :address, class: 'label' %>
+            <%= cf.text_area :address, rows: 3, class: 'textarea textarea-bordered w-full' %>
+          </div>
+        </div>
+
+        <turbo-frame id="customer_form_result"></turbo-frame>
+
+        <div class="modal-action">
+          <button type="button" class="btn btn-ghost" onclick="document.getElementById('new_customer_modal').close()">
+            Cancel
+          </button>
+          <%= cf.submit 'Add Customer', class: 'btn btn-primary' %>
+        </div>
+      <% end %>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button>close</button>
+    </form>
+  </dialog>
+<% end %>
