@@ -34,22 +34,39 @@ class QuoteDocumentBuilder
   private
 
   def build_cover_page
-    <<~HTML
-      <div class="cover-page page-break">
-        <div class="cover-header">
-          <h1>#{quote.title || 'Quote'}</h1>
-          <p class="reference">Reference: #{quote.reference_number}</p>
-          <p class="date">Date: #{quote.created_at.strftime('%d %B %Y')}</p>
-          #{quote.valid_until.present? ? "<p class='valid-until'>Valid Until: #{quote.valid_until.strftime('%d %B %Y')}</p>" : ''}
+    date_line = "Date: #{quote.created_at.strftime('%d %B %Y')}"
+    date_line += " | Valid Until: #{quote.valid_until.strftime('%d %B %Y')}" if quote.valid_until.present?
+    
+    customer_section = if quote.customer.company.present?
+      <<~HTML
+        <div class="customer-details">
+          <h2>Customer Details</h2>
+          <p><strong>#{quote.customer.company.name}</strong></p>
+          <p class="attention-of">Attention: #{quote.customer.name}</p>
+          <p>#{quote.customer.email}</p>
+          #{quote.customer.phone.present? ? "<p>#{quote.customer.phone}</p>" : ''}
         </div>
-        
+      HTML
+    else
+      <<~HTML
         <div class="customer-details">
           <h2>Customer Details</h2>
           <p><strong>#{quote.customer.name}</strong></p>
           <p>#{quote.customer.email}</p>
           #{quote.customer.phone.present? ? "<p>#{quote.customer.phone}</p>" : ''}
-          #{quote.customer.company.present? ? "<p>Company: #{quote.customer.company.name}</p>" : ''}
         </div>
+      HTML
+    end
+    
+    <<~HTML
+      <div class="cover-page page-break">
+        <div class="cover-header">
+          <h1>#{quote.title || 'Quote'}</h1>
+          <p class="reference">Reference: #{quote.reference_number}</p>
+          <p class="date">#{date_line}</p>
+        </div>
+        
+        #{customer_section}
         
         #{quote.notes.present? ? "<div class='quote-notes'><h2>Notes</h2><p>#{simple_format(quote.notes)}</p></div>" : ''}
       </div>

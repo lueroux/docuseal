@@ -52,7 +52,13 @@
 </head>
 
 <body>
-  <button class="print-button no-print" onclick="window.print()">Print / Save as PDF</button>
+  <button class="print-button no-print" id="printButton">Print / Save as PDF</button>
   <%= yield %>
+  
+  <script nonce="<%= content_security_policy_nonce %>">
+    document.getElementById('printButton').addEventListener('click', function() {
+      window.print();
+    });
+  </script>
 </body>
 </html>
