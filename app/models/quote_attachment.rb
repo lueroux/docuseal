@@ -18,6 +18,16 @@ class QuoteAttachment < ApplicationRecord
   validate :file_attached
   validate :file_content_type
 
+  scope :ordered, -> { order(:sort_order, :created_at) }
+
+  def image?
+    file.attached? && file.content_type.start_with?('image/')
+  end
+
+  def pdf?
+    file.attached? && file.content_type == 'application/pdf'
+  end
+
   private
 
   def file_attached
@@ -29,15 +39,5 @@ class QuoteAttachment < ApplicationRecord
     return if ALLOWED_CONTENT_TYPES.include?(file.content_type)
 
     errors.add(:file, "type #{file.content_type} is not permitted")
-  end
-
-  scope :ordered, -> { order(:sort_order, :created_at) }
-
-  def image?
-    file.attached? && file.content_type.start_with?('image/')
-  end
-
-  def pdf?
-    file.attached? && file.content_type == 'application/pdf'
   end
 end
