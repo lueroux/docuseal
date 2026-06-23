@@ -21,6 +21,20 @@ class IbcosSearchController < ApplicationController
                nil
              end
 
-    render json: { result: }
+    if result
+      render json: { 
+        found: true, 
+        product: {
+          name: result[:name],
+          brand: result[:brand],
+          category: result[:category],
+          retail_price: result[:retail_price],
+          cost_price: result[:cost_price],
+          description: result[:name] # Use name as description for now
+        }
+      }
+    else
+      render json: { found: false }
+    end
   end
 end
