@@ -8,10 +8,11 @@ Rails.backtrace_cleaner.remove_silencers!
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
-  # Allow the configured APP_URL host (supports custom domains like quotes.buxtons.net)
-  if ENV['APP_URL'].present?
-    require 'uri'
-    config.hosts << URI.parse(ENV['APP_URL']).host
+  # Configure allowed hosts (comma-separated env var, or allow all if not set)
+  if ENV['ALLOWED_HOSTS'].present?
+    config.hosts = ENV['ALLOWED_HOSTS'].split(',').map(&:strip)
+  else
+    config.hosts = nil # Allow all hosts (use only if behind trusted proxy)
   end
 
   # Code is not reloaded between requests.
