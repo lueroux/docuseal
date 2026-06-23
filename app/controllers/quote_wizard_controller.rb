@@ -88,10 +88,17 @@ class QuoteWizardController < ApplicationController
       
       respond_to do |format|
         format.turbo_stream do
-          streams = [
-            turbo_stream.append('quote_items_list', partial: 'quote_wizard/quote_item', locals: { quote_item: @quote_item }),
-            turbo_stream.replace('quote_total', partial: 'quote_wizard/quote_total', locals: { quote: @quote })
-          ]
+          streams = []
+          
+          # If this is the first item, remove empty state and update container class
+          if @quote.quote_items.count == 1
+            streams << turbo_stream.remove('empty_state')
+            streams << turbo_stream.update('quote_items_list', html: '', attributes: { class: 'space-y-3' })
+            streams << turbo_stream.update('quote_total_container', html: '', attributes: { class: 'mt-6 flex justify-end' })
+          end
+          
+          streams << turbo_stream.append('quote_items_list', partial: 'quote_wizard/quote_item', locals: { quote_item: @quote_item })
+          streams << turbo_stream.replace('quote_total', partial: 'quote_wizard/quote_total', locals: { quote: @quote })
           
           if compatibility_issues.any?
             streams << turbo_stream.prepend('compatibility_alerts', partial: 'quote_wizard/compatibility_alert', locals: { issues: compatibility_issues })
