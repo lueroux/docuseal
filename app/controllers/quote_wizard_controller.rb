@@ -5,7 +5,7 @@ class QuoteWizardController < ApplicationController
   before_action :set_wizard_data
   authorize_resource :quote
 
-  STEPS = %w[customer products options pricing review].freeze
+  STEPS = %w[customer products options pricing attachments review].freeze
   PAYMENT_STRUCTURE_CONFIG = {
     'cash' => {
       title: 'Cash Price',
@@ -39,9 +39,13 @@ class QuoteWizardController < ApplicationController
     when 'pricing'
       @quote_items = @quote.quote_items.includes(:product).ordered
       @payment_structures = @quote.quote_payment_structures.order(:payment_type, :created_at)
+    when 'attachments'
+      @quote_attachments = @quote.quote_attachments.ordered
     when 'review'
       @quote_items = @quote.quote_items.includes(:product, :quote_item_options).ordered
       @payment_structures = @quote.quote_payment_structures.order(:payment_type, :created_at)
+      @quote_attachments = @quote.quote_attachments.ordered
+      @compatibility_issues = check_quote_compatibility
     end
 
     render "quote_wizard/#{@step}"
@@ -87,6 +91,45 @@ class QuoteWizardController < ApplicationController
     respond_to do |format|
       format.turbo_stream { render_payment_structure_stream(payment_type) }
       format.html { redirect_back fallback_location: quote_wizard_path(@quote, step: 'pricing'), notice: 'Payment option removed.' }
+    end
+  end
+
+  def upload_attachment
+    @attachment = @quote.quote_attachments.build(attachment_params)
+
+    respond_to do |format|
+      if @attachment.save
+        format.turbo_stream do
+          render turbo_stream: [
+            turbo_stream.append('quote_attachments_list',
+                                partial: 'quote_wizard/attachment_card',
+                                locals: { attachment: @attachment }),
+            turbo_stream.replace('attachment_upload_form',
+                                 partial: 'quote_wizard/attachment_upload_form',
+                                 locals: { quote: @quote })
+          ]
+        end
+        format.html { redirect_back fallback_location: quote_wizard_path(@quote, step: 'attachments'), notice: 'File uploaded.' }
+      else
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace(
+            'attachment_upload_form',
+            partial: 'quote_wizard/attachment_upload_form',
+            locals: { quote: @quote, errors: @attachment.errors.full_messages }
+          )
+        end
+        format.html { redirect_back fallback_location: quote_wizard_path(@quote, step: 'attachments'), alert: @attachment.errors.full_messages.to_sentence }
+      end
+    end
+  end
+
+  def remove_attachment
+    attachment = @quote.quote_attachments.find(params[:attachment_id])
+    attachment.destroy
+
+    respond_to do |format|
+      format.turbo_stream { render turbo_stream: turbo_stream.remove("attachment_#{attachment.id}") }
+      format.html { redirect_back fallback_location: quote_wizard_path(@quote, step: 'attachments'), notice: 'Attachment removed.' }
     end
   end
 
@@ -218,6 +261,22 @@ class QuoteWizardController < ApplicationController
   end
 
   def finalize
+    issues = check_quote_compatibility
+    blocking = issues.select { |i| i[:type] == 'requires' }
+
+    if blocking.any?
+      @compatibility_issues = issues
+      @quote_items = @quote.quote_items.includes(:product, :quote_item_options).ordered
+      @payment_structures = @quote.quote_payment_structures.order(:payment_type, :created_at)
+      @quote_attachments = @quote.quote_attachments.ordered
+      flash.now[:alert] = 'Please resolve compatibility issues before finalizing.'
+      render 'quote_wizard/review', status: :unprocessable_content
+      return
+    end
+
+    # Auto-remove excluded items
+    remove_excluded_items
+
     @quote.update!(status: 'draft', total_price: @quote.calculate_total)
     redirect_to @quote, notice: 'Quote created successfully!'
   end
@@ -254,6 +313,23 @@ class QuoteWizardController < ApplicationController
       quote_wizard_path(@quote, step: STEPS[next_index])
     else
       finalize_quote_wizard_path(@quote)
+    end
+  end
+
+  def check_quote_compatibility
+    issues = []
+    @quote.quote_items.includes(:product).each do |item|
+      issues.concat(check_compatibility(item))
+    end
+    issues.uniq { |i| [i[:type], i[:sku]] }
+  end
+
+  def remove_excluded_items
+    @quote.quote_items.includes(:product).each do |item|
+      item.product.product_compatibility_rules.excludes.each do |rule|
+        excluded = @quote.quote_items.joins(:product).find_by(products: { sku: rule.result_action })
+        excluded&.destroy
+      end
     end
   end
 
@@ -320,6 +396,10 @@ class QuoteWizardController < ApplicationController
       :valid_until,
       :status
     )
+  end
+
+  def attachment_params
+    params.require(:quote_attachment).permit(:name, :description, :file)
   end
 
   def quote_item_params

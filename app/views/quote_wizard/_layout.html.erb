@@ -67,8 +67,12 @@
       <%= link_to 'Next', quote_wizard_path(@quote, step: QuoteWizardController::STEPS[@step_index + 1]), 
           class: 'btn btn-primary' %>
     <% else %>
-      <%= button_to 'Finalize Quote', finalize_quote_wizard_path(@quote), 
-          method: :post, class: 'btn btn-primary' %>
+      <% has_blocking_issues = defined?(@compatibility_issues) && @compatibility_issues&.any? { |i| i[:type] == 'requires' } %>
+      <%= button_to 'Finalize Quote', finalize_quote_wizard_path(@quote),
+          method: :post,
+          class: "btn btn-primary #{has_blocking_issues ? 'btn-disabled' : ''}",
+          disabled: has_blocking_issues,
+          title: has_blocking_issues ? 'Resolve compatibility issues before finalizing' : nil %>
     <% end %>
   </div>
 </div>

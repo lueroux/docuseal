@@ -7,6 +7,7 @@ class Quote < ApplicationRecord
   has_many :quote_items, dependent: :destroy
   has_many :quote_sections, dependent: :destroy
   has_many :quote_payment_structures, dependent: :destroy
+  has_many :quote_attachments, dependent: :destroy
   has_many :products, through: :quote_items
 
   validates :reference_number, presence: true, uniqueness: true

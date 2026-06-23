@@ -34,6 +34,7 @@ class Ability
     can :manage, QuoteItemOption, quote_item: { quote: { account_id: user.account_id } }
     can :manage, QuoteSection, quote: { account_id: user.account_id }
     can :manage, QuotePaymentStructure, quote: { account_id: user.account_id }
+    can :manage, QuoteAttachment, quote: { account_id: user.account_id }
 
     can :manage, :mcp
   end

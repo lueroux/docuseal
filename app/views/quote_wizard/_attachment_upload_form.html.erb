@@ -1,0 +1,48 @@
+<div id="attachment_upload_form">
+  <% errors = local_assigns[:errors] %>
+  <% if errors.present? %>
+    <div class="alert alert-error mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <ul class="list-disc list-inside text-sm">
+        <% errors.each do |e| %>
+          <li><%= e %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with url: upload_attachment_quote_wizard_path(quote),
+                model: QuoteAttachment.new,
+                data: { controller: 'attachment-upload' } do |f| %>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div class="form-control">
+        <%= f.label :name, 'Label', class: 'label' %>
+        <%= f.text_field :name, class: 'base-input', placeholder: 'e.g. Site Plan, Drawing A', required: true %>
+      </div>
+      <div class="form-control">
+        <%= f.label :description, 'Description (optional)', class: 'label' %>
+        <%= f.text_field :description, class: 'base-input', placeholder: 'Brief description' %>
+      </div>
+    </div>
+
+    <div class="form-control mb-4">
+      <%= f.label :file, 'File', class: 'label' %>
+      <label class="block w-full h-28 relative bg-base-200 hover:bg-base-200/70 rounded-md border border-base-content border-dashed cursor-pointer">
+        <div class="absolute inset-0 flex items-center justify-center gap-3 p-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <div>
+            <div class="font-medium text-sm">Click to upload or drag and drop</div>
+            <div class="text-xs text-base-content/60">PDF, PNG, JPG, GIF, WEBP, DOC, DOCX, XLS, XLSX</div>
+          </div>
+        </div>
+        <%= f.file_field :file, class: 'sr-only', accept: '.pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.xls,.xlsx', required: true %>
+      </label>
+    </div>
+
+    <%= f.submit 'Upload File', class: 'btn btn-primary' %>
+  <% end %>
+</div>

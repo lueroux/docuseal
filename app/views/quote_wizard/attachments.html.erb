@@ -1,0 +1,24 @@
+<%= render 'quote_wizard/layout' do %>
+  <h2 class="text-2xl font-bold mb-2">Attachments</h2>
+  <p class="text-base-content/70 mb-6">
+    Upload drawings, site plans, or supporting documents to include with this quote.
+    This step is optional — you can proceed without adding any files.
+  </p>
+
+  <!-- Existing attachments list -->
+  <div id="quote_attachments_list" class="space-y-3 mb-6">
+    <% if @quote_attachments.any? %>
+      <% @quote_attachments.each do |attachment| %>
+        <%= render 'quote_wizard/attachment_card', attachment: attachment %>
+      <% end %>
+    <% else %>
+      <div id="no_attachments_notice" class="text-sm text-base-content/50 italic">
+        No attachments yet. Use the form below to upload files.
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Upload form -->
+  <div class="divider">Add File</div>
+  <%= render 'quote_wizard/attachment_upload_form', quote: @quote %>
+<% end %>

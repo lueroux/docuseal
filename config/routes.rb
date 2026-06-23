@@ -211,6 +211,8 @@ Rails.application.routes.draw do
   post 'quotes/:id/wizard/payment_structures', to: 'quote_wizard#add_payment_structure', as: :quote_wizard_payment_structures
   patch 'quotes/:id/wizard/payment_structures/:structure_id', to: 'quote_wizard#update_payment_structure', as: :quote_wizard_payment_structure
   delete 'quotes/:id/wizard/payment_structures/:structure_id', to: 'quote_wizard#remove_payment_structure', as: :remove_payment_structure_quote_wizard
+  post 'quotes/:id/wizard/attachments', to: 'quote_wizard#upload_attachment', as: :upload_attachment_quote_wizard
+  delete 'quotes/:id/wizard/attachments/:attachment_id', to: 'quote_wizard#remove_attachment', as: :remove_attachment_quote_wizard
   post 'quotes/:id/wizard/finalize', to: 'quote_wizard#finalize', as: :finalize_quote_wizard
 
   # Phase 2 — Customer portal (magic-link auth)
