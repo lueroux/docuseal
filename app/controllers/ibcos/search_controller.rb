@@ -3,6 +3,7 @@
 module Ibcos
   class SearchController < ApplicationController
     skip_before_action :verify_authenticity_token, only: %i[index quick]
+    skip_authorization_check
     before_action :authenticate_user!
 
     def index

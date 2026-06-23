@@ -25,13 +25,18 @@ class IbcosGoldService
 
   def self.quick_part_search(part_no:)
     Rails.cache.fetch("ibcos:quick:#{part_no}", expires_in: CACHE_TTL) do
+      Rails.logger.info "Loading parts for quick search..."
       parts = load_all_parts
+      Rails.logger.info "Parts loaded: #{parts.size}"
       
       # Find exact match by SKU
-      parts.find { |part| part[:sku]&.downcase == part_no.downcase }
+      result = parts.find { |part| part[:sku]&.downcase == part_no.downcase }
+      Rails.logger.info "Match found: #{result.present?}"
+      result
     end
   rescue StandardError => e
-    Rails.logger.error "IBCOS quick search error: #{e.message}"
+    Rails.logger.error "IBCOS quick search error: #{e.class} - #{e.message}"
+    Rails.logger.error e.backtrace.first(5).join("\n")
     nil
   end
 
