@@ -57,6 +57,41 @@
       </div>
     <% end %>
     
+    <div class="divider">XML Data Sync</div>
+    
+    <div class="card bg-base-100 shadow p-4">
+      <% sync_config = EncryptedConfig.find_by(key: 'ibcos_xml_sync') %>
+      <% if sync_config && sync_config.value['last_sync'] %>
+        <div class="mb-4">
+          <p class="text-sm"><strong>Last Sync:</strong> <%= Time.parse(sync_config.value['last_sync']).strftime('%d %B %Y at %H:%M') %></p>
+          <p class="text-sm"><strong>Status:</strong> 
+            <span class="<%= sync_config.value['status'] == 'success' ? 'text-success' : 'text-error' %>">
+              <%= sync_config.value['status']&.titleize %>
+            </span>
+          </p>
+          <% if sync_config.value['file_size'] %>
+            <p class="text-sm"><strong>File Size:</strong> <%= number_to_human_size(sync_config.value['file_size']) %></p>
+          <% end %>
+          <% if sync_config.value['error'] %>
+            <p class="text-sm text-error"><strong>Error:</strong> <%= sync_config.value['error'] %></p>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="alert alert-warning mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span>XML file not yet synced. Click "Sync Now" to download product data.</span>
+        </div>
+      <% end %>
+      
+      <div class="flex gap-2 items-center">
+        <%= button_to 'Sync Now', sync_settings_ibcos_path, method: :post, class: 'btn btn-primary', 
+            data: { turbo_confirm: 'Download latest product data from buxtons.net?' } %>
+        <div id="ibcos_sync_status" class="text-sm"></div>
+      </div>
+    </div>
+    
     <div class="divider">Test Connection</div>
     
     <div class="card bg-base-100 shadow p-4">

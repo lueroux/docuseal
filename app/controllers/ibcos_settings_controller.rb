@@ -18,6 +18,13 @@ class IbcosSettingsController < ApplicationController
     render :index, status: :unprocessable_content
   end
 
+  def sync
+    IbcosXmlSyncJob.perform_later
+    redirect_to settings_ibcos_path, notice: 'IBCOS XML sync started. This may take a few moments.'
+  rescue StandardError => e
+    redirect_to settings_ibcos_path, alert: "Sync failed: #{e.message}"
+  end
+
   private
 
   def load_encrypted_config
