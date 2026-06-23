@@ -18,7 +18,7 @@
     <% end %>
     <%= stylesheet_pack_tag 'application', media: 'all' %>
   </head>
-  <body>
+  <body class="min-h-screen bg-[#f7f7f7]">
     <% if params[:modal].present? %>
       <% modal_uri = Addressable::URI.parse(params[:modal]) %>
       <% url_params = Rails.application.routes.recognize_path(modal_uri.path, method: :get) %>
