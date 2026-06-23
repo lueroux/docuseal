@@ -20,11 +20,16 @@ module Ibcos
     end
 
     def quick
-      result = if params[:part_no].present?
-                 IbcosGoldService.quick_part_search(part_no: params[:part_no])
-               else
-                 nil
-               end
+      Rails.logger.info "IBCOS quick search request: part_no=#{params[:part_no]}"
+      
+      unless params[:part_no].present?
+        Rails.logger.warn "No part_no provided"
+        return render json: { found: false, error: 'No part number provided' }
+      end
+
+      Rails.logger.info "Calling IbcosGoldService.quick_part_search..."
+      result = IbcosGoldService.quick_part_search(part_no: params[:part_no])
+      Rails.logger.info "Search result: #{result.inspect}"
 
       if result
         render json: { 
