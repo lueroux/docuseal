@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class IbcosSettingsController < ApplicationController
-  before_action :load_encrypted_config
-  authorize_resource :encrypted_config, only: :index
-  authorize_resource :encrypted_config, parent: false, only: :create
+  before_action :load_encrypted_config, except: :sync
+  authorize_resource :encrypted_config, only: %i[index create]
+  skip_authorization_check only: :sync
 
   def index; end
 
