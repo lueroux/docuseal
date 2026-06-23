@@ -215,7 +215,17 @@ class QuoteDocumentBuilder
     text.to_s.gsub(/\r\n?/, "\n").split(/\n\n+/).map { |t| "<p>#{t.gsub(/\n/, '<br>')}</p>" }.join
   end
 
-  def number_with_precision(number, precision: 2)
-    format("%.#{precision}f", number)
+  def number_with_precision(number, precision: 2, delimiter: ',')
+    # Format the number with precision
+    formatted = format("%.#{precision}f", number)
+    
+    # Split into integer and decimal parts
+    parts = formatted.split('.')
+    
+    # Add thousand separators to integer part
+    parts[0].gsub!(/(\d)(?=(\d{3})+(?!\d))/, "\\1#{delimiter}")
+    
+    # Rejoin with decimal point
+    parts.join('.')
   end
 end
