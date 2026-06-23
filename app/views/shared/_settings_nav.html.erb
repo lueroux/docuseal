@@ -57,11 +57,6 @@
           <%= link_to 'Webhooks', settings_webhooks_path, class: 'text-base hover:bg-base-300' %>
         </li>
       <% end %>
-      <% if can?(:read, EncryptedConfig.new(key: 'saml_configs', account: current_account)) %>
-        <li>
-          <%= link_to 'SSO', settings_sso_index_path, class: 'text-base hover:bg-base-300' %>
-        </li>
-      <% end %>
       <% if can?(:read, McpToken) && can?(:manage, :mcp) %>
         <li>
           <%= link_to 'MCP', settings_mcp_index_path, class: 'text-base hover:bg-base-300' %>
