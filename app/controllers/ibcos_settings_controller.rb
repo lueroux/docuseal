@@ -19,10 +19,14 @@ class IbcosSettingsController < ApplicationController
   end
 
   def sync
-    IbcosXmlSyncJob.perform_later(reschedule: false)
-    redirect_to settings_ibcos_path, notice: 'IBCOS XML sync started. This may take a few moments.'
-  rescue StandardError => e
-    redirect_to settings_ibcos_path, alert: "Sync failed: #{e.message}"
+    begin
+      # Run synchronously to avoid Sidekiq dependency
+      IbcosXmlSyncJob.perform_now(reschedule: false)
+      redirect_to settings_ibcos_path, notice: 'IBCOS XML sync completed successfully!'
+    rescue StandardError => e
+      Rails.logger.error "IBCOS sync controller error: #{e.message}\n#{e.backtrace.join("\n")}"
+      redirect_to settings_ibcos_path, alert: "Sync failed: #{e.message}"
+    end
   end
 
   private

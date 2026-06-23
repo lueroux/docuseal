@@ -23,15 +23,15 @@ class IbcosXmlSyncJob < ApplicationJob
         # Save XML to file
         File.write(storage_path, response.body)
         
-        # Update last sync timestamp
-        config = EncryptedConfig.find_or_create_by(key: 'ibcos_xml_sync')
-        config.update(
-          value: {
-            last_sync: Time.current.iso8601,
-            file_size: response.body.bytesize,
-            status: 'success'
-          }
-        )
+        # Update last sync timestamp (global, not account-specific)
+        config = EncryptedConfig.where(key: 'ibcos_xml_sync').first_or_initialize
+        config.account_id ||= Account.first&.id # Use first account if none set
+        config.value = {
+          last_sync: Time.current.iso8601,
+          file_size: response.body.bytesize,
+          status: 'success'
+        }
+        config.save!
         
         Rails.logger.info "IBCOS XML sync completed. File size: #{response.body.bytesize} bytes"
       else
@@ -41,14 +41,14 @@ class IbcosXmlSyncJob < ApplicationJob
       Rails.logger.error "IBCOS XML sync failed: #{e.message}"
       
       # Update sync status with error
-      config = EncryptedConfig.find_or_create_by(key: 'ibcos_xml_sync')
-      config.update(
-        value: {
-          last_sync: Time.current.iso8601,
-          status: 'error',
-          error: e.message
-        }
-      )
+      config = EncryptedConfig.where(key: 'ibcos_xml_sync').first_or_initialize
+      config.account_id ||= Account.first&.id
+      config.value = {
+        last_sync: Time.current.iso8601,
+        status: 'error',
+        error: e.message
+      }
+      config.save!
       
       raise e
     ensure
