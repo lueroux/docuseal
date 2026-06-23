@@ -108,7 +108,7 @@ class IbcosGoldService
       sku: node['partnumber'] || node['stockcode'],
       name: node['description'] || node['name'],
       brand: node['brand'] || node['manufacturer'],
-      category: node['productgroup'] || node['category'],
+      category: node['category'],
       retail_price: parse_decimal(node['retailprice'] || node['price']),
       cost_price: parse_decimal(node['dealernet'] || node['averageprice'] || node['cost']),
       stock: (node['freestock'] || node['stock'] || node['quantity'])&.to_i || 0
