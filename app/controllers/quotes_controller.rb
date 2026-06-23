@@ -47,6 +47,7 @@ class QuotesController < ApplicationController
   end
 
   def edit
+    @quote = Quote.includes(quote_items: :product).find(params[:id])
     @customers = Customer.where(account: current_account).ordered
     @products = Product.where(account: current_account).available
   end

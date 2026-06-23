@@ -1,7 +1,11 @@
 <div class="container mx-auto px-4 py-6 max-w-4xl">
-  <h1 class="text-4xl font-bold mb-6">Edit Quote: <%= @quote.reference_number %></h1>
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-4xl font-bold">Edit Quote: <%= @quote.reference_number %></h1>
+    <span data-autosave-target="status" class="autosave-status"></span>
+  </div>
 
-  <%= form_with model: @quote, local: true, class: 'space-y-6' do |f| %>
+  <%= form_with model: @quote, local: false, class: 'space-y-6', 
+      data: { controller: 'autosave', autosave_target: 'form', action: 'input->autosave#save' } do |f| %>
     <% if @quote.errors.any? %>
       <div class="alert alert-error">
         <h3 class="font-bold">Please fix the following errors:</h3>
@@ -65,4 +69,90 @@
       <%= f.submit 'Update Quote', class: 'btn btn-primary' %>
     </div>
   <% end %>
+
+  <!-- Products Section -->
+  <div class="card bg-base-100 shadow-xl mt-6">
+    <div class="card-body">
+      <h2 class="card-title">Products</h2>
+      
+      <% if @quote.quote_items.any? %>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Discount %</th>
+                <th>Total</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @quote.quote_items.ordered.each do |item| %>
+                <tr>
+                  <td><%= item.product.name %></td>
+                  <td class="font-mono text-sm"><%= item.product.sku %></td>
+                  <td>
+                    <%= form_with model: [@quote, item], method: :patch, class: 'flex items-center gap-2' do |f| %>
+                      <%= f.number_field :quantity, min: 1, class: 'input input-sm input-bordered w-20', 
+                          onchange: 'this.form.requestSubmit()' %>
+                    <% end %>
+                  </td>
+                  <td class="font-mono">£<%= number_with_precision(item.quoted_price, precision: 2) %></td>
+                  <td>
+                    <%= form_with model: [@quote, item], method: :patch, class: 'flex items-center gap-2' do |f| %>
+                      <%= f.number_field :discount_percentage, min: 0, max: 100, step: 0.01, 
+                          class: 'input input-sm input-bordered w-20', 
+                          onchange: 'this.form.requestSubmit()' %>
+                    <% end %>
+                  </td>
+                  <td class="font-mono font-semibold">£<%= number_with_precision(item.total_with_options, precision: 2) %></td>
+                  <td>
+                    <%= button_to quote_quote_item_path(@quote, item), method: :delete, 
+                        data: { turbo_confirm: 'Remove this product?' },
+                        class: 'btn btn-sm btn-ghost text-error' do %>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+            <tfoot>
+              <tr class="font-bold">
+                <td colspan="5" class="text-right">Total:</td>
+                <td class="font-mono text-lg">£<%= number_with_precision(@quote.total_price, precision: 2) %></td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-base-content/70 text-center py-8">No products added yet</p>
+      <% end %>
+
+      <!-- Add Product Form -->
+      <div class="divider">Add Product</div>
+      <%= form_with model: [@quote, @quote.quote_items.build], class: 'grid grid-cols-1 md:grid-cols-4 gap-4 items-end' do |f| %>
+        <div class="form-control md:col-span-2">
+          <%= f.label :product_id, 'Product', class: 'label' %>
+          <%= f.collection_select :product_id, @products, :id, :display_name,
+              { prompt: 'Select a product' },
+              { class: 'select select-bordered w-full', required: true } %>
+        </div>
+        
+        <div class="form-control">
+          <%= f.label :quantity, 'Quantity', class: 'label' %>
+          <%= f.number_field :quantity, value: 1, min: 1, class: 'input input-bordered w-full', required: true %>
+        </div>
+        
+        <div class="form-control">
+          <%= f.submit 'Add Product', class: 'btn btn-primary w-full' %>
+        </div>
+      <% end %>
+    </div>
+  </div>
 </div>

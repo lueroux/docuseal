@@ -195,6 +195,7 @@ Rails.application.routes.draw do
     member do
       get :document
     end
+    resources :quote_items, only: %i[create update destroy]
   end
 
   # Phase 2 — Customer portal (magic-link auth)
