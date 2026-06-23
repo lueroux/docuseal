@@ -1,0 +1,103 @@
+<div class="card bg-base-200 h-full">
+  <div class="card-body space-y-4">
+    <div>
+      <div class="text-sm uppercase tracking-wide text-base-content/70"><%= config[:title] %></div>
+      <p class="text-xs text-base-content/60 mt-1"><%= config[:description] %></p>
+    </div>
+
+    <% if form_errors.present? %>
+      <div class="rounded bg-error/10 border border-error px-3 py-2 text-sm text-error">
+        <ul class="list-disc ml-4">
+          <% form_errors.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: structure,
+                  url: structure.persisted? ? quote_wizard_payment_structure_path(quote, structure) : quote_wizard_payment_structures_path(quote),
+                  method: structure.persisted? ? :patch : :post,
+                  data: { turbo_frame: "payment_structure_#{structure.payment_type}" } do |f| %>
+      <%= f.hidden_field :payment_type %>
+
+      <div class="space-y-3">
+        <% case structure.payment_type %>
+        <% when 'cash' %>
+          <div class="form-control">
+            <label class="label text-xs">Cash Price</label>
+            <div class="input input-bordered input-sm flex items-center">
+              £<%= f.number_field :total_cost, step: 0.01, class: 'grow bg-transparent pl-2', placeholder: 'Total cash price' %>
+            </div>
+          </div>
+
+          <div class="form-control">
+            <label class="label text-xs">Deposit (optional)</label>
+            <div class="input input-bordered input-sm flex items-center">
+              £<%= f.number_field :deposit, step: 0.01, class: 'grow bg-transparent pl-2', placeholder: 'Deposit amount' %>
+            </div>
+          </div>
+        <% else %>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="form-control">
+              <label class="label text-xs"><%= structure.payment_type == 'lease' ? 'Lease term (months)' : 'Term (months)' %></label>
+              <%= f.number_field :term_months, min: 1, class: 'input input-bordered input-sm', placeholder: '36' %>
+            </div>
+
+            <div class="form-control">
+              <label class="label text-xs">Deposit</label>
+              <div class="input input-bordered input-sm flex items-center">
+                £<%= f.number_field :deposit, step: 0.01, class: 'grow bg-transparent pl-2', placeholder: '0.00' %>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-control">
+            <label class="label text-xs"><%= structure.payment_type == 'lease' ? 'Monthly rental' : 'Monthly payment' %></label>
+            <div class="input input-bordered input-sm flex items-center">
+              £<%= f.number_field :monthly_payment, step: 0.01, class: 'grow bg-transparent pl-2', placeholder: '299.00' %>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="form-control">
+              <label class="label text-xs">Total cost</label>
+              <div class="input input-bordered input-sm flex items-center">
+                £<%= f.number_field :total_cost, step: 0.01, class: 'grow bg-transparent pl-2', placeholder: '10999.00' %>
+              </div>
+            </div>
+
+            <div class="form-control">
+              <label class="label text-xs">APR</label>
+              <div class="input input-bordered input-sm flex items-center">
+                <%= f.number_field :apr, step: 0.1, class: 'grow bg-transparent pl-2', placeholder: '4.9' %>
+                <span class="pr-2 text-xs text-base-content/60">%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-control">
+            <label class="label text-xs">Provider</label>
+            <%= f.text_field :provider, class: 'input input-bordered input-sm', placeholder: 'Husqvarna Finance' %>
+          </div>
+        <% end %>
+
+        <div class="flex items-center justify-between pt-2">
+          <label class="label cursor-pointer gap-2 text-xs">
+            <%= f.check_box :is_primary, class: 'checkbox checkbox-sm' %>
+            <span>Mark as primary option</span>
+          </label>
+
+          <div class="flex gap-2">
+            <% if structure.persisted? %>
+              <%= link_to 'Remove', remove_payment_structure_quote_wizard_path(quote, structure_id: structure.id),
+                          data: { turbo_method: :delete, turbo_confirm: 'Remove this payment option?' },
+                          class: 'btn btn-ghost btn-xs text-error' %>
+            <% end %>
+            <%= f.submit structure.persisted? ? 'Update' : 'Save', class: 'btn btn-primary btn-sm' %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

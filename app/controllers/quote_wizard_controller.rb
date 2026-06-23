@@ -6,6 +6,22 @@ class QuoteWizardController < ApplicationController
   authorize_resource :quote
 
   STEPS = %w[customer products options pricing review].freeze
+  PAYMENT_STRUCTURE_CONFIG = {
+    'cash' => {
+      title: 'Cash Price',
+      description: 'One-off payment with optional deposit deduction.'
+    },
+    'finance' => {
+      title: 'Finance Plan',
+      description: 'Monthly finance example showing deposit, APR and provider.'
+    },
+    'lease' => {
+      title: 'Lease Option',
+      description: 'Operating lease details with monthly rental and term.'
+    }
+  }.freeze
+
+  helper_method :payment_structure_configs
 
   def show
     @step = params[:step] || 'customer'
@@ -22,11 +38,56 @@ class QuoteWizardController < ApplicationController
       load_product_options
     when 'pricing'
       @quote_items = @quote.quote_items.includes(:product).ordered
+      @payment_structures = @quote.quote_payment_structures.order(:payment_type, :created_at)
     when 'review'
       @quote_items = @quote.quote_items.includes(:product, :quote_item_options).ordered
+      @payment_structures = @quote.quote_payment_structures.order(:payment_type, :created_at)
     end
 
     render "quote_wizard/#{@step}"
+  end
+
+  def add_payment_structure
+    @payment_structure = @quote.quote_payment_structures.new(payment_structure_params)
+
+    respond_to do |format|
+      if @payment_structure.save
+        format.turbo_stream { render_payment_structure_stream(@payment_structure.payment_type) }
+        format.html { redirect_back fallback_location: quote_wizard_path(@quote, step: 'pricing'), notice: 'Payment option saved.' }
+      else
+        format.turbo_stream { render_payment_structure_form_with_errors(@payment_structure) }
+        format.html do
+          redirect_back fallback_location: quote_wizard_path(@quote, step: 'pricing'), alert: @payment_structure.errors.full_messages.to_sentence
+        end
+      end
+    end
+  end
+
+  def update_payment_structure
+    @payment_structure = @quote.quote_payment_structures.find(params[:structure_id])
+
+    respond_to do |format|
+      if @payment_structure.update(payment_structure_params)
+        format.turbo_stream { render_payment_structure_stream(@payment_structure.payment_type) }
+        format.html { redirect_back fallback_location: quote_wizard_path(@quote, step: 'pricing'), notice: 'Payment option updated.' }
+      else
+        format.turbo_stream { render_payment_structure_form_with_errors(@payment_structure) }
+        format.html do
+          redirect_back fallback_location: quote_wizard_path(@quote, step: 'pricing'), alert: @payment_structure.errors.full_messages.to_sentence
+        end
+      end
+    end
+  end
+
+  def remove_payment_structure
+    payment_structure = @quote.quote_payment_structures.find(params[:structure_id])
+    payment_type = payment_structure.payment_type
+    payment_structure.destroy
+
+    respond_to do |format|
+      format.turbo_stream { render_payment_structure_stream(payment_type) }
+      format.html { redirect_back fallback_location: quote_wizard_path(@quote, step: 'pricing'), notice: 'Payment option removed.' }
+    end
   end
 
   def update
@@ -268,5 +329,53 @@ class QuoteWizardController < ApplicationController
       :discount_percentage,
       :notes
     )
+  end
+
+  def payment_structure_params
+    params.require(:quote_payment_structure).permit(
+      :payment_type,
+      :term_months,
+      :deposit,
+      :monthly_payment,
+      :total_cost,
+      :apr,
+      :provider,
+      :is_primary
+    )
+  end
+
+  def render_payment_structure_stream(payment_type)
+    structure = @quote.quote_payment_structures.find_by(payment_type:) ||
+                @quote.quote_payment_structures.build(payment_type:)
+
+    render turbo_stream: turbo_stream.replace(
+      "payment_structure_#{payment_type}",
+      partial: 'quote_wizard/payment_structure_card',
+      locals: {
+        quote: @quote,
+        structure: structure,
+        config: payment_structure_configs[payment_type],
+        form_errors: nil
+      }
+    )
+  end
+
+  def render_payment_structure_form_with_errors(structure)
+    payment_type = structure.payment_type || payment_structure_params[:payment_type]
+
+    render turbo_stream: turbo_stream.replace(
+      "payment_structure_#{payment_type}",
+      partial: 'quote_wizard/payment_structure_card',
+      locals: {
+        quote: @quote,
+        structure: structure,
+        config: payment_structure_configs[payment_type],
+        form_errors: structure.errors.full_messages
+      }
+    )
+  end
+
+  def payment_structure_configs
+    PAYMENT_STRUCTURE_CONFIG
   end
 end

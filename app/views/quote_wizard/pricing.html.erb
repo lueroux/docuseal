@@ -142,6 +142,11 @@
     <div class="mt-6">
       <%= render 'quote_wizard/quote_total', quote: @quote %>
     </div>
+
+    <!-- Payment Structures -->
+    <div class="mt-6">
+      <%= render 'quote_wizard/payment_structures', quote: @quote, payment_structures: @payment_structures %>
+    </div>
   <% else %>
     <div class="text-center py-12 bg-base-200 rounded-lg">
       <p class="text-xl text-base-content/70">No products to price</p>

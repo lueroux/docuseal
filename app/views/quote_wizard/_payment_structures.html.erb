@@ -1,0 +1,27 @@
+<% grouped_structures = Array(payment_structures).index_by(&:payment_type) %>
+<div class="card bg-base-100 border border-base-300" id="payment_structures">
+  <div class="card-body space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h3 class="text-xl font-semibold">Payment Options</h3>
+        <p class="text-sm text-base-content/70">Share cash, finance and lease examples so customers can pick the structure that fits.</p>
+      </div>
+      <div class="text-sm text-base-content/60">
+        Mark one option as <span class="font-semibold">Primary</span> to highlight your recommended plan.
+      </div>
+    </div>
+
+    <div class="grid gap-4 lg:grid-cols-3">
+      <% payment_structure_configs.each do |type, config| %>
+        <% structure = grouped_structures[type] || quote.quote_payment_structures.build(payment_type: type) %>
+        <%= turbo_frame_tag "payment_structure_#{type}" do %>
+          <%= render 'quote_wizard/payment_structure_card',
+                    quote: quote,
+                    structure: structure,
+                    config: config,
+                    form_errors: nil %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>
