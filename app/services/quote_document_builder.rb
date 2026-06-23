@@ -13,6 +13,13 @@ class QuoteDocumentBuilder
     html_parts = []
     html_parts << build_cover_page
     
+    # Always show products if they exist
+    if quote.quote_items.any?
+      # Check if there's already a pricing section
+      has_pricing_section = sections.any? { |s| s.section_type == 'pricing' }
+      html_parts << build_pricing_table(nil) unless has_pricing_section
+    end
+    
     sections.each do |section|
       html_parts << case section.section_type
                     when 'spec_sheet'
@@ -91,9 +98,11 @@ class QuoteDocumentBuilder
     vat = subtotal * 0.20
     total = subtotal + vat
 
+    section_title = section&.title || 'Pricing'
+
     <<~HTML
       <div class="pricing-section page-break">
-        <h2>#{section.title || 'Pricing'}</h2>
+        <h2>#{section_title}</h2>
         <table class="pricing-table">
           <thead>
             <tr>
