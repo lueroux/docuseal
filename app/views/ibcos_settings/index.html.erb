@@ -56,6 +56,59 @@
         <%= f.button button_title(title: 'Save IBCOS Settings', disabled_with: 'Saving…'), class: 'base-button' %>
       </div>
     <% end %>
+    
+    <div class="divider">Test Connection</div>
+    
+    <div class="card bg-base-100 shadow p-4">
+      <div class="flex gap-2 items-center">
+        <button type="button" id="test_ibcos_btn" class="btn btn-secondary" onclick="testIbcosConnection()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Test Connection
+        </button>
+        <div id="ibcos_test_status" class="text-sm"></div>
+      </div>
+    </div>
   </div>
   <div class="w-0 md:w-52"></div>
 </div>
+
+<script>
+  async function testIbcosConnection() {
+    const btn = document.getElementById('test_ibcos_btn');
+    const status = document.getElementById('ibcos_test_status');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading loading-spinner"></span> Testing...';
+    status.textContent = '';
+    status.className = 'text-sm';
+    
+    try {
+      const response = await fetch('/ibcos/quick?part_no=TEST', {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        status.textContent = 'Connection successful! IBCOS Gold is responding.';
+        status.className = 'text-sm text-success';
+      } else {
+        status.textContent = 'Connection failed. Please check your credentials.';
+        status.className = 'text-sm text-error';
+      }
+    } catch (error) {
+      console.error('IBCOS test error:', error);
+      status.textContent = 'Connection error: ' + error.message;
+      status.className = 'text-sm text-error';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg> Test Connection`;
+    }
+  }
+</script>
