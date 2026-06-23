@@ -55,6 +55,7 @@ import OpenModal from './elements/open_modal'
 import BarChart from './elements/bar_chart'
 import FieldCondition from './elements/field_condition'
 import ConfirmUpload from './elements/confirm_upload'
+import IbcosLookup from './elements/ibcos_lookup'
 
 import * as TurboInstantClick from './lib/turbo_instant_click'
 
@@ -148,6 +149,7 @@ safeRegisterElement('open-modal', OpenModal)
 safeRegisterElement('bar-chart', BarChart)
 safeRegisterElement('field-condition', FieldCondition)
 safeRegisterElement('confirm-upload', ConfirmUpload)
+safeRegisterElement('ibcos-lookup', IbcosLookup)
 
 safeRegisterElement('template-builder', class extends HTMLElement {
   connectedCallback () {
