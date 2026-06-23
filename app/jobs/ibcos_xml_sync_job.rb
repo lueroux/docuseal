@@ -11,12 +11,12 @@ class IbcosXmlSyncJob < ApplicationJob
     
     begin
       # Download XML file with headers to bypass Cloudflare
+      # Note: Faraday automatically handles gzip decompression
       response = Faraday.get(xml_url) do |req|
         req.options.timeout = 60
         req.options.open_timeout = 10
         req.headers['User-Agent'] = 'Buxtons-Quote-Tool/1.0 (Rails; +https://docuseal-railway-production-38a4.up.railway.app)'
         req.headers['Accept'] = 'application/xml, text/xml, */*'
-        req.headers['Accept-Encoding'] = 'gzip, deflate'
         req.headers['Connection'] = 'keep-alive'
       end
       
