@@ -8,211 +8,290 @@ class QuoteDocumentBuilder
   end
 
   def build_html
-    sections = quote.quote_sections.visible.ordered
-    
-    html_parts = []
-    html_parts << build_cover_page
-    
-    # Always show products if they exist
-    if quote.quote_items.any?
-      # Check if there's already a pricing section
-      has_pricing_section = sections.any? { |s| s.section_type == 'pricing' }
-      html_parts << build_pricing_table(nil) unless has_pricing_section
-    end
-    
-    sections.each do |section|
-      html_parts << case section.section_type
-                    when 'spec_sheet'
-                      build_spec_sheet(section)
-                    when 'pricing'
-                      build_pricing_table(section)
-                    when 'terms'
-                      build_terms_section(section)
-                    when 'attachment'
-                      build_attachment_section(section)
-                    else
-                      build_custom_section(section)
-                    end
-    end
-    
-    html_parts.compact.join("\n")
+    <<~HTML
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Quotation #{quote.reference_number} — Buxtons</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        #{build_styles}
+      </head>
+      <body>
+        <div class="document">
+          #{build_header}
+          #{build_title}
+          #{build_meta_section}
+          #{build_description if quote.notes.present?}
+          #{build_items_table}
+          #{build_totals}
+          #{build_disclaimer}
+          #{build_signature_section}
+        </div>
+      </body>
+      </html>
+    HTML
   end
 
   private
 
-  def build_cover_page
-    date_line = "Date: #{quote.created_at.strftime('%d %B %Y')}"
-    date_line += " | Valid Until: #{quote.valid_until.strftime('%d %B %Y')}" if quote.valid_until.present?
-    
-    customer_section = if quote.customer.company.present?
-      <<~HTML
-        <div class="customer-details">
-          <h2>Customer Details</h2>
-          <p><strong>#{quote.customer.company.name}</strong></p>
-          <p class="attention-of">Attention: #{quote.customer.name}</p>
-          <p>#{quote.customer.email}</p>
-          #{quote.customer.phone.present? ? "<p>#{quote.customer.phone}</p>" : ''}
+  def build_styles
+    <<~CSS
+      <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', Arial, sans-serif; font-size: 13px; color: #242424; background: #e5e5e5; padding: 32px 16px; }
+        .document { width: 794px; min-height: 1123px; background: #ffffff; margin: 0 auto; padding: 56px 64px 48px; box-shadow: 0 4px 24px rgba(0,0,0,0.12); position: relative; }
+        :root { --green: #94be57; --green-dark: #7aa844; --grey-light: #f4f4f4; --grey-mid: #c8c8c8; --text-dark: #242424; --text-muted: #666666; }
+        .uppercase { text-transform: uppercase; }
+        .text-right { text-align: right; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+        .logo-area img { max-height: 72px; max-width: 200px; object-fit: contain; }
+        .company-address { text-align: right; font-size: 11.5px; font-weight: 500; letter-spacing: 0.06em; line-height: 1.7; text-transform: uppercase; color: var(--text-dark); }
+        .company-address a { color: inherit; text-decoration: none; }
+        .document-title { font-size: 28px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; color: var(--text-dark); margin-bottom: 24px; border-bottom: 3px solid var(--green); padding-bottom: 14px; }
+        .meta-row { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+        .client-block { flex: 1; }
+        .block-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+        .client-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; color: var(--text-dark); }
+        .client-details { font-size: 12px; line-height: 1.7; color: var(--text-dark); }
+        .quote-details-block { flex: 0 0 240px; background: var(--grey-light); padding: 16px 20px; }
+        .quote-details-block table { width: 100%; border-collapse: collapse; }
+        .quote-details-block td { padding: 3px 0; font-size: 12px; line-height: 1.5; }
+        .quote-details-block td:first-child { font-weight: 600; color: var(--text-muted); white-space: nowrap; padding-right: 12px; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.05em; }
+        .quote-details-block td:last-child { font-weight: 500; color: var(--text-dark); }
+        .description-block { background: var(--grey-light); border-left: 4px solid var(--green); padding: 14px 18px; margin-bottom: 28px; font-size: 12.5px; line-height: 1.7; color: var(--text-dark); }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 12.5px; }
+        .items-table thead tr { background: var(--green); color: #ffffff; }
+        .items-table thead th { padding: 10px 14px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; font-size: 11px; }
+        .items-table thead th:first-child { text-align: left; }
+        .items-table thead th:not(:first-child) { text-align: right; }
+        .items-table tbody tr:nth-child(odd) { background: #ffffff; }
+        .items-table tbody tr:nth-child(even) { background: var(--grey-light); }
+        .items-table tbody td { padding: 10px 14px; line-height: 1.5; vertical-align: top; }
+        .items-table tbody td:not(:first-child) { text-align: right; }
+        .totals-wrapper { display: flex; justify-content: flex-end; margin-bottom: 28px; }
+        .totals-table { width: 280px; border-collapse: collapse; font-size: 12.5px; }
+        .totals-table td { padding: 7px 14px; }
+        .totals-table tr:not(.total-row) td:first-child { color: var(--text-muted); font-weight: 500; }
+        .totals-table tr:not(.total-row) td:last-child { text-align: right; font-weight: 500; }
+        .totals-table tr:not(.total-row):nth-child(odd) { background: var(--grey-light); }
+        .totals-table .total-row { background: var(--green); color: #ffffff; }
+        .totals-table .total-row td { font-weight: 700; font-size: 13.5px; letter-spacing: 0.04em; }
+        .totals-table .total-row td:last-child { text-align: right; }
+        .disclaimer { font-size: 11px; color: var(--text-muted); line-height: 1.7; border-top: 1px solid var(--grey-light); padding-top: 16px; margin-bottom: 24px; }
+        .sign-terms-row { display: flex; justify-content: space-between; gap: 32px; margin-bottom: 0; }
+        .signature-block { flex: 1; }
+        .signature-line { border-bottom: 1.5px solid var(--text-dark); height: 44px; margin-bottom: 6px; }
+        .signature-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em; }
+        .date-signed-line { margin-top: 20px; }
+        .terms-block { flex: 1; background: var(--grey-light); padding: 14px 18px; }
+        .terms-block p { font-size: 12px; line-height: 1.6; color: var(--text-dark); margin-top: 8px; }
+        @media print {
+          body { background: #ffffff; padding: 0; }
+          .document { width: 100%; min-height: auto; box-shadow: none; padding: 20mm 18mm; margin: 0; }
+          a { color: inherit; text-decoration: none; }
+        }
+      </style>
+    CSS
+  end
+
+  def build_header
+    <<~HTML
+      <header class="header">
+        <div class="logo-area">
+          <img src="https://buxtons.net/wp-content/uploads/2025/02/buxtons-264x116.png" alt="Buxtons logo" />
         </div>
-      HTML
-    else
-      <<~HTML
-        <div class="customer-details">
-          <h2>Customer Details</h2>
-          <p><strong>#{quote.customer.name}</strong></p>
-          <p>#{quote.customer.email}</p>
-          #{quote.customer.phone.present? ? "<p>#{quote.customer.phone}</p>" : ''}
-        </div>
-      HTML
-    end
+        <address class="company-address">
+          Coppice House, Penkridge,<br>
+          Staffordshire, ST19 5RP<br>
+          <a href="https://www.buxtons.net">www.buxtons.net</a> / <a href="tel:01785712397">01785 712397</a>
+        </address>
+      </header>
+    HTML
+  end
+
+  def build_title
+    <<~HTML
+      <h1 class="document-title">Quotation</h1>
+    HTML
+  end
+
+  def build_meta_section
+    customer_name = quote.customer.company.present? ? quote.customer.company.name : quote.customer.name
+    customer_address = format_address(quote.customer)
     
     <<~HTML
-      <div class="cover-page page-break">
-        <div class="cover-header">
-          <h1>#{quote.title || 'Quote'}</h1>
-          <p class="reference">Reference: #{quote.reference_number}</p>
-          <p class="date">#{date_line}</p>
+      <div class="meta-row">
+        <div class="client-block">
+          <div class="block-label">Prepared for</div>
+          <div class="client-name">#{customer_name}</div>
+          <div class="client-details">
+            #{customer_address}
+            #{quote.customer.phone.present? ? "<br>#{quote.customer.phone}" : ''}
+          </div>
         </div>
-        
-        #{customer_section}
-        
-        #{quote.notes.present? ? "<div class='quote-notes'><h2>Notes</h2><p>#{simple_format(quote.notes)}</p></div>" : ''}
+        <div class="quote-details-block">
+          <table>
+            <tbody>
+              <tr>
+                <td>Quotation No:</td>
+                <td>#{quote.reference_number}</td>
+              </tr>
+              <tr>
+                <td>Date:</td>
+                <td>#{quote.created_at.strftime('%d/%m/%Y')}</td>
+              </tr>
+              <tr>
+                <td>Valid Until:</td>
+                <td>#{quote.valid_until&.strftime('%d/%m/%Y') || 'N/A'}</td>
+              </tr>
+              <tr>
+                <td>Prepared By:</td>
+                <td>#{quote.user.first_name} #{quote.user.last_name}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     HTML
   end
 
-  def build_spec_sheet(section)
+  def build_description
     <<~HTML
-      <div class="spec-sheet-section page-break">
-        <h2>#{section.title || 'Specifications'}</h2>
-        #{render_spec_content(section.content)}
+      <div class="description-block">
+        <p>#{simple_format(quote.notes)}</p>
       </div>
     HTML
   end
 
-  def build_pricing_table(section)
+  def build_items_table
+    return '' unless quote.quote_items.any?
+    
     items_html = quote.quote_items.ordered.map do |item|
       build_item_row(item)
     end.join("\n")
 
-    subtotal = quote.quote_items.sum { |item| item.total_with_options }
+    <<~HTML
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th scope="col">Description</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Price</th>
+            <th scope="col">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          #{items_html}
+        </tbody>
+      </table>
+    HTML
+  end
+
+  def build_item_row(item)
+    description_parts = ["<strong>#{item.product.name}</strong>"]
+    description_parts << "<div style='font-size: 11px; color: #666; margin-top: 2px;'>SKU: #{item.product.sku}</div>"
+    
+    if item.quote_item_options.where(is_selected: true).any?
+      options_list = item.quote_item_options.where(is_selected: true).map { |opt| opt.name }.join(', ')
+      description_parts << "<div style='font-size: 11px; margin-top: 4px;'><em>Options: #{options_list}</em></div>"
+    end
+    
+    if item.notes.present?
+      description_parts << "<div style='font-size: 11px; color: #666; margin-top: 4px;'>#{item.notes}</div>"
+    end
+
+    <<~HTML
+      <tr>
+        <td>#{description_parts.join}</td>
+        <td>#{item.quantity}</td>
+        <td>£#{number_with_precision(item.quoted_price, precision: 2)}</td>
+        <td>£#{number_with_precision(item.line_total, precision: 2)}</td>
+      </tr>
+    HTML
+  end
+
+  def build_totals
+    subtotal = quote.quote_items.sum { |item| item.line_total }
     vat = subtotal * 0.20
     total = subtotal + vat
 
-    section_title = section&.title || 'Pricing'
-
     <<~HTML
-      <div class="pricing-section page-break">
-        <h2>#{section_title}</h2>
-        <table class="pricing-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Quantity</th>
-              <th>Unit Price</th>
-              <th>Total</th>
-            </tr>
-          </thead>
+      <div class="totals-wrapper">
+        <table class="totals-table">
           <tbody>
-            #{items_html}
-          </tbody>
-          <tfoot>
             <tr>
-              <td colspan="3" class="text-right"><strong>Subtotal:</strong></td>
+              <td>Subtotal</td>
               <td>£#{number_with_precision(subtotal, precision: 2)}</td>
             </tr>
             <tr>
-              <td colspan="3" class="text-right"><strong>VAT (20%):</strong></td>
+              <td>VAT (20%)</td>
               <td>£#{number_with_precision(vat, precision: 2)}</td>
             </tr>
             <tr class="total-row">
-              <td colspan="3" class="text-right"><strong>Total:</strong></td>
-              <td><strong>£#{number_with_precision(total, precision: 2)}</strong></td>
+              <td>Total</td>
+              <td>£#{number_with_precision(total, precision: 2)}</td>
             </tr>
-          </tfoot>
+          </tbody>
         </table>
       </div>
     HTML
   end
 
-  def build_item_row(item)
-    options_html = if item.quote_item_options.selected.any?
-                     option_list = item.quote_item_options.selected.map { |opt| "#{opt.name} (+£#{number_with_precision(opt.price, precision: 2)})" }.join(', ')
-                     "<div class='item-options'>Options: #{option_list}</div>"
-                   else
-                     ''
-                   end
-
+  def build_disclaimer
     <<~HTML
-      <tr>
-        <td>
-          <strong>#{item.product.name}</strong>
-          <div class="item-sku">SKU: #{item.product.sku}</div>
-          #{options_html}
-          #{item.notes.present? ? "<div class='item-notes'>#{item.notes}</div>" : ''}
-        </td>
-        <td>#{item.quantity}</td>
-        <td>£#{number_with_precision(item.quoted_price, precision: 2)}</td>
-        <td>£#{number_with_precision(item.total_with_options, precision: 2)}</td>
-      </tr>
+      <p class="disclaimer">
+        Above information is not an invoice and only an estimate of goods/services.
+        Payment will be due prior to provision or delivery of goods/services.
+      </p>
     HTML
   end
 
-  def build_terms_section(section)
+  def build_signature_section
     <<~HTML
-      <div class="terms-section page-break">
-        <h2>#{section.title || 'Terms & Conditions'}</h2>
-        <div class="terms-content">
-          #{section.content['html'] || '<p>Standard terms and conditions apply.</p>'}
+      <div class="sign-terms-row">
+        <div class="signature-block">
+          <div class="block-label">Acceptance</div>
+          <div class="signature-line"></div>
+          <p class="signature-label">Signature</p>
+          <div class="signature-line date-signed-line"></div>
+          <p class="signature-label">Date signed</p>
+        </div>
+        <div class="terms-block">
+          <div class="block-label">Terms &amp; Conditions</div>
+          <p>Please confirm your acceptance of this quote by signing and returning a copy.</p>
         </div>
       </div>
     HTML
   end
 
-  def build_attachment_section(section)
-    <<~HTML
-      <div class="attachment-section">
-        <h3>#{section.title}</h3>
-        <p>#{section.content['description']}</p>
-      </div>
-    HTML
-  end
-
-  def build_custom_section(section)
-    <<~HTML
-      <div class="custom-section">
-        <h2>#{section.title}</h2>
-        <div>#{section.content['html'] || section.content['text']}</div>
-      </div>
-    HTML
-  end
-
-  def render_spec_content(content)
-    return '' if content.blank?
-
-    html = []
-    
-    if content['specs'].present?
-      html << '<table class="specs-table">'
-      content['specs'].each do |key, value|
-        html << "<tr><th>#{key}</th><td>#{value}</td></tr>"
-      end
-      html << '</table>'
+  def format_address(customer)
+    parts = []
+    if customer.company.present? && customer.company.billing_address.present?
+      addr = customer.company.billing_address
+      parts << addr['line1'] if addr['line1'].present?
+      parts << addr['line2'] if addr['line2'].present?
+      parts << addr['city'] if addr['city'].present?
+      parts << addr['postcode'] if addr['postcode'].present?
+    elsif customer.billing_address.present?
+      addr = customer.billing_address
+      parts << addr['line1'] if addr['line1'].present?
+      parts << addr['line2'] if addr['line2'].present?
+      parts << addr['city'] if addr['city'].present?
+      parts << addr['postcode'] if addr['postcode'].present?
     end
-
-    if content['features'].present?
-      html << '<h3>Features</h3>'
-      html << '<ul class="features-list">'
-      content['features'].each do |feature|
-        html << "<li>#{feature}</li>"
-      end
-      html << '</ul>'
-    end
-
-    html.join("\n")
+    parts.any? ? parts.join(',<br>') : customer.email
   end
 
   def simple_format(text)
-    text.to_s.gsub(/\r\n?/, "\n").split(/\n\n+/).map { |t| "<p>#{t.gsub(/\n/, '<br>')}</p>" }.join
+    return '' if text.blank?
+    text.to_s.gsub(/\r\n?/, "\n").split(/\n\n+/).map { |t| t.gsub(/\n/, '<br>') }.join('</p><p>')
   end
 
   def number_with_precision(number, precision: 2, delimiter: ',')
