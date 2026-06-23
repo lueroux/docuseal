@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class IbcosSearchController < ApplicationController
-  skip_before_action :verify_authenticity_token, only: %i[index]
+  skip_before_action :verify_authenticity_token, only: %i[index quick]
   before_action :authenticate_user!
 
   def index
@@ -12,6 +12,10 @@ class IbcosSearchController < ApplicationController
               end
 
     render json: { results: }
+  rescue StandardError => e
+    Rails.logger.error "IBCOS search error: #{e.class} - #{e.message}"
+    Rails.logger.error e.backtrace.first(10).join("\n")
+    render json: { error: e.message }, status: :internal_server_error
   end
 
   def quick
@@ -30,11 +34,15 @@ class IbcosSearchController < ApplicationController
           category: result[:category],
           retail_price: result[:retail_price],
           cost_price: result[:cost_price],
-          description: result[:name] # Use name as description for now
+          description: result[:name]
         }
       }
     else
       render json: { found: false }
     end
+  rescue StandardError => e
+    Rails.logger.error "IBCOS quick search error: #{e.class} - #{e.message}"
+    Rails.logger.error e.backtrace.first(10).join("\n")
+    render json: { error: e.message }, status: :internal_server_error
   end
 end
