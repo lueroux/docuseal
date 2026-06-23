@@ -39,8 +39,8 @@ module Ibcos
             name: result[:name],
             brand: result[:brand],
             category: result[:category],
-            retail_price: result[:retail_price],
-            cost_price: result[:cost_price],
+            retail_price: format_price(result[:retail_price]),
+            cost_price: format_price(result[:cost_price]),
             description: result[:name]
           }
         }
@@ -51,6 +51,14 @@ module Ibcos
       Rails.logger.error "IBCOS quick search error: #{e.class} - #{e.message}"
       Rails.logger.error e.backtrace.first(10).join("\n")
       render json: { error: e.message }, status: :internal_server_error
+    end
+
+    private
+
+    def format_price(price)
+      return nil if price.nil?
+      
+      number_with_precision(price, precision: 2, delimiter: ',')
     end
   end
 end
