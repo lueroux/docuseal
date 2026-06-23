@@ -1,17 +1,53 @@
-<div id="flash" class="absolute top-0 w-full h-0 z-20">
-  <div class="max-w-xl mx-auto mt-1.5">
-    <div class="px-4 py-3 rounded-2xl bg-base-200 flex items-center justify-between mx-4 md:mx-0">
-      <div class="flex items-center space-x-3">
-        <% if flash[:notice] %>
-          <%= svg_icon('info_circle', class: 'stroke-info flex-none w-6 h-6') %>
-        <% else %>
-          <%= svg_icon('exclamation_circle', class: 'stroke-error flex-none w-6 h-6') %>
-        <% end %>
-        <div>
-          <span><%= flash[:notice] || flash[:alert] %></span>
-        </div>
-      </div>
-      <remove-on-event data-event-type="click" data-selector-id="flash" class="mr-1 cursor-pointer">&times;</remove-on-event>
+<div id="flash" class="toast toast-end toast-bottom z-50">
+  <div class="alert <%= flash[:notice] ? 'alert-success' : 'alert-error' %> shadow-lg animate-slide-in-right">
+    <div class="flex items-center gap-3">
+      <% if flash[:notice] %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      <% else %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      <% end %>
+      <span><%= flash[:notice] || flash[:alert] %></span>
     </div>
+    <button type="button" class="btn btn-sm btn-ghost btn-circle" onclick="this.closest('#flash').remove()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
   </div>
 </div>
+
+<style>
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+  }
+  
+  #flash {
+    position: fixed;
+  }
+</style>
+
+<script>
+  // Auto-dismiss after 5 seconds
+  setTimeout(() => {
+    const flash = document.getElementById('flash');
+    if (flash) {
+      flash.style.animation = 'slide-in-right 0.3s ease-out reverse';
+      setTimeout(() => flash.remove(), 300);
+    }
+  }, 5000);
+</script>

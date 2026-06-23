@@ -29,17 +29,62 @@
       <% end %>
     </nav>
 
+    <% if notice.present? || alert.present? %>
+      <div class="toast toast-end toast-bottom z-50">
+        <div class="alert <%= notice.present? ? 'alert-success' : 'alert-error' %> shadow-lg animate-slide-in-right">
+          <div class="flex items-center gap-3">
+            <% if notice.present? %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            <% else %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            <% end %>
+            <span><%= notice || alert %></span>
+          </div>
+          <button type="button" class="btn btn-sm btn-ghost btn-circle" onclick="this.closest('.toast').remove()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <style>
+        @keyframes slide-in-right {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-slide-in-right {
+          animation: slide-in-right 0.3s ease-out;
+        }
+        
+        .toast {
+          position: fixed;
+        }
+      </style>
+      
+      <script>
+        setTimeout(() => {
+          const toast = document.querySelector('.toast');
+          if (toast) {
+            toast.style.animation = 'slide-in-right 0.3s ease-out reverse';
+            setTimeout(() => toast.remove(), 300);
+          }
+        }, 5000);
+      </script>
+    <% end %>
+
     <main class="container mx-auto px-4 py-8 max-w-4xl">
-      <% if notice.present? %>
-        <div role="alert" class="alert alert-success mb-6">
-          <span><%= notice %></span>
-        </div>
-      <% end %>
-      <% if alert.present? %>
-        <div role="alert" class="alert alert-error mb-6">
-          <span><%= alert %></span>
-        </div>
-      <% end %>
 
       <%= yield %>
     </main>
