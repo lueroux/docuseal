@@ -61,11 +61,21 @@ class QuoteWizardController < ApplicationController
   end
 
   def add_item
-    product = Product.find(params[:product_id])
+    # Handle JSON body params
+    if request.content_type == 'application/json'
+      body_params = JSON.parse(request.body.read)
+      product_id = body_params['product_id']
+      quantity = body_params['quantity'] || 1
+    else
+      product_id = params[:product_id]
+      quantity = params[:quantity] || 1
+    end
+    
+    product = Product.find(product_id)
     
     @quote_item = @quote.quote_items.build(
       product: product,
-      quantity: params[:quantity] || 1,
+      quantity: quantity,
       cost_price: product.cost_price,
       retail_price: product.retail_price,
       quoted_price: product.retail_price,

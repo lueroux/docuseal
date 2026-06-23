@@ -39,13 +39,9 @@
               <% end %>
             </select>
 
-            <%= button_to 'Add Product', add_item_quote_wizard_path(@quote), 
-                method: :post,
-                params: { product_id: '', quantity: 1 },
-                form: { id: 'add_product_form', data: { turbo_frame: 'quote_items_list' } },
-                class: 'btn btn-primary',
-                disabled: true,
-                id: 'add_product_btn' %>
+            <button type="button" id="add_product_btn" class="btn btn-primary" disabled>
+              Add Product
+            </button>
           </div>
         </div>
       </div>
@@ -191,17 +187,58 @@
       });
     });
 
-    // Product selection
+    // Product selection and adding
     const productSelect = document.getElementById('product_select');
     const addBtn = document.getElementById('add_product_btn');
-    const addForm = document.getElementById('add_product_form');
 
     productSelect.addEventListener('change', () => {
-      if (productSelect.value) {
+      addBtn.disabled = !productSelect.value;
+    });
+
+    addBtn.addEventListener('click', async () => {
+      if (!productSelect.value) return;
+      
+      const productId = productSelect.value;
+      const scrollY = window.scrollY; // Save scroll position
+      
+      addBtn.disabled = true;
+      addBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Adding...';
+      
+      try {
+        const response = await fetch('<%= add_item_quote_wizard_path(@quote) %>', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+            'Accept': 'text/vnd.turbo-stream.html'
+          },
+          body: JSON.stringify({
+            product_id: productId,
+            quantity: 1
+          })
+        });
+        
+        if (response.ok) {
+          const html = await response.text();
+          Turbo.renderStreamMessage(html);
+          
+          // Reset form
+          productSelect.value = '';
+          addBtn.disabled = true;
+          addBtn.textContent = 'Add Product';
+          
+          // Restore scroll position
+          setTimeout(() => window.scrollTo(0, scrollY), 10);
+        } else {
+          alert('Error adding product');
+          addBtn.disabled = false;
+          addBtn.textContent = 'Add Product';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error adding product');
         addBtn.disabled = false;
-        addForm.action = addForm.action.replace(/product_id=[^&]*/, `product_id=${productSelect.value}`);
-      } else {
-        addBtn.disabled = true;
+        addBtn.textContent = 'Add Product';
       }
     });
   </script>

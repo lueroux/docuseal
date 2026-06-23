@@ -101,6 +101,83 @@
     </div>
   <% end %>
 
+  <!-- Products Section -->
+  <% if @quote.quote_items.any? %>
+    <div class="card bg-base-100 shadow-xl mb-6">
+      <div class="card-body">
+        <h2 class="card-title mb-4">Products (<%= pluralize(@quote.quote_items.count, 'item') %>)</h2>
+        
+        <div class="overflow-x-auto">
+          <table class="table table-zebra">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th class="text-center">Qty</th>
+                <th class="text-right">Unit Price</th>
+                <th class="text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @quote.quote_items.ordered.each do |item| %>
+                <tr>
+                  <td>
+                    <div class="font-semibold"><%= item.product.name %></div>
+                    <div class="text-sm text-base-content/70">
+                      <%= item.product.sku %>
+                      <% if item.product.brand.present? %>
+                        | <%= item.product.brand %>
+                      <% end %>
+                    </div>
+                    <% if item.notes.present? %>
+                      <div class="text-xs text-base-content/60 mt-1">
+                        <strong>Note:</strong> <%= item.notes %>
+                      </div>
+                    <% end %>
+                  </td>
+                  <td class="text-center"><%= item.quantity %></td>
+                  <td class="text-right font-mono">
+                    £<%= number_with_precision(item.quoted_price, precision: 2, delimiter: ',') %>
+                    <% if item.discount_percentage > 0 %>
+                      <div class="text-xs text-success">
+                        -<%= item.discount_percentage %>% discount
+                      </div>
+                    <% end %>
+                  </td>
+                  <td class="text-right font-mono font-semibold">
+                    £<%= number_with_precision(item.line_total, precision: 2, delimiter: ',') %>
+                  </td>
+                </tr>
+                
+                <% if item.quote_item_options.where(is_selected: true).any? %>
+                  <tr class="bg-base-200/50">
+                    <td colspan="4" class="text-sm">
+                      <div class="pl-4">
+                        <strong>Options:</strong>
+                        <% item.quote_item_options.where(is_selected: true).each do |option| %>
+                          <span class="badge badge-sm badge-ghost ml-2">
+                            <%= option.name %> (+£<%= number_with_precision(option.price, precision: 2) %>)
+                          </span>
+                        <% end %>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              <% end %>
+            </tbody>
+            <tfoot>
+              <tr class="font-bold">
+                <td colspan="3" class="text-right">Total:</td>
+                <td class="text-right font-mono text-lg">
+                  £<%= number_with_precision(@quote.calculate_total, precision: 2, delimiter: ',') %>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
   <div class="card bg-base-100 shadow-xl">
     <div class="card-body">
       <h2 class="card-title">Quote Details</h2>

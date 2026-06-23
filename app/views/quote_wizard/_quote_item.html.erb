@@ -25,19 +25,30 @@
                 data: { action: 'change->form#submit' } %>
           </div>
 
-          <div class="form-control">
-            <label class="label label-text text-xs">Price (£)</label>
-            <%= f.number_field :quoted_price, step: 0.01, value: quote_item.quoted_price,
-                class: 'input input-bordered input-sm w-28',
-                data: { action: 'change->form#submit' } %>
-          </div>
+          <div data-controller="price-calculator" 
+               data-price-calculator-retail-value="<%= quote_item.retail_price %>"
+               class="flex items-center gap-2">
+            
+            <div class="form-control">
+              <label class="label label-text text-xs">Price (£)</label>
+              <%= f.number_field :quoted_price, step: 0.01, value: quote_item.quoted_price,
+                  class: 'input input-bordered input-sm w-28',
+                  data: { 
+                    price_calculator_target: 'quotedPrice',
+                    action: 'change->price-calculator#quotedPriceChanged' 
+                  } %>
+            </div>
 
-          <div class="form-control">
-            <label class="label label-text text-xs">Discount (%)</label>
-            <%= f.number_field :discount_percentage, min: 0, max: 100, step: 0.1, 
-                value: quote_item.discount_percentage || 0,
-                class: 'input input-bordered input-sm w-24',
-                data: { action: 'change->form#submit' } %>
+            <div class="form-control">
+              <label class="label label-text text-xs">Discount (%)</label>
+              <%= f.number_field :discount_percentage, min: 0, max: 100, step: 0.1, 
+                  value: quote_item.discount_percentage || 0,
+                  class: 'input input-bordered input-sm w-24',
+                  data: { 
+                    price_calculator_target: 'discountPercentage',
+                    action: 'change->price-calculator#discountPercentageChanged' 
+                  } %>
+            </div>
           </div>
         <% end %>
 
