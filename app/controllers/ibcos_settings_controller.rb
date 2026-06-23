@@ -19,7 +19,7 @@ class IbcosSettingsController < ApplicationController
   end
 
   def sync
-    IbcosXmlSyncJob.perform_later
+    IbcosXmlSyncJob.perform_later(reschedule: false)
     redirect_to settings_ibcos_path, notice: 'IBCOS XML sync started. This may take a few moments.'
   rescue StandardError => e
     redirect_to settings_ibcos_path, alert: "Sync failed: #{e.message}"

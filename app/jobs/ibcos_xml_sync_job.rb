@@ -3,7 +3,7 @@
 class IbcosXmlSyncJob < ApplicationJob
   queue_as :default
 
-  def perform
+  def perform(reschedule: true)
     Rails.logger.info 'Starting IBCOS XML sync...'
     
     xml_url = 'https://buxtons.net/goldxml/parts.xml'
@@ -51,6 +51,11 @@ class IbcosXmlSyncJob < ApplicationJob
       )
       
       raise e
+    ensure
+      # Schedule next sync in 2 hours (only if reschedule is true)
+      if reschedule
+        IbcosXmlSyncJob.set(wait: 2.hours).perform_later(reschedule: true)
+      end
     end
   end
 end
