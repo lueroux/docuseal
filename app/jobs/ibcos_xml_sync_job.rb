@@ -43,6 +43,9 @@ class IbcosXmlSyncJob < ApplicationJob
         }
         config.save!
         
+        # Clear all IBCOS caches to force fresh data load
+        Rails.cache.delete_matched('ibcos:*')
+        
         Rails.logger.info "IBCOS XML sync completed. File size: #{response.body.bytesize} bytes, Parts: #{parts_count}"
       else
         raise "HTTP #{response.status}: #{response.reason_phrase}"
