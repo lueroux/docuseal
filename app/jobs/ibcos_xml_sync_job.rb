@@ -27,17 +27,22 @@ class IbcosXmlSyncJob < ApplicationJob
         # Save XML to file
         File.write(storage_path, response.body)
         
+        # Count parts in XML
+        doc = Nokogiri::XML(response.body)
+        parts_count = doc.xpath('//part | //Part').count
+        
         # Update last sync timestamp (global, not account-specific)
         config = EncryptedConfig.where(key: 'ibcos_xml_sync').first_or_initialize
         config.account_id ||= Account.first&.id # Use first account if none set
         config.value = {
           last_sync: Time.current.iso8601,
           file_size: response.body.bytesize,
+          parts_count: parts_count,
           status: 'success'
         }
         config.save!
         
-        Rails.logger.info "IBCOS XML sync completed. File size: #{response.body.bytesize} bytes"
+        Rails.logger.info "IBCOS XML sync completed. File size: #{response.body.bytesize} bytes, Parts: #{parts_count}"
       else
         raise "HTTP #{response.status}: #{response.reason_phrase}"
       end

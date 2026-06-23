@@ -72,6 +72,9 @@
           <% if sync_config.value['file_size'] %>
             <p class="text-sm"><strong>File Size:</strong> <%= number_to_human_size(sync_config.value['file_size']) %></p>
           <% end %>
+          <% if sync_config.value['parts_count'] %>
+            <p class="text-sm"><strong>Parts Found:</strong> <%= number_with_delimiter(sync_config.value['parts_count']) %></p>
+          <% end %>
           <% if sync_config.value['error'] %>
             <p class="text-sm text-error"><strong>Error:</strong> <%= sync_config.value['error'] %></p>
           <% end %>
