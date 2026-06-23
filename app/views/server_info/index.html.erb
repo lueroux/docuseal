@@ -1,0 +1,71 @@
+<div class="flex flex-wrap space-y-4 md:flex-nowrap md:space-y-0">
+  <%= render 'shared/settings_nav' %>
+  <div class="flex-grow max-w-xl mx-auto">
+    <h1 class="text-4xl font-bold mb-2">Server Information</h1>
+    <p class="text-base-content/70 mb-6">
+      Server details for whitelisting and troubleshooting.
+    </p>
+
+    <div class="card bg-base-100 shadow p-6 mb-4">
+      <h2 class="text-2xl font-bold mb-4">IP Addresses</h2>
+      <div class="space-y-2">
+        <% @server_info[:ip_addresses].each do |type, ip| %>
+          <div class="flex justify-between items-center p-3 bg-base-200 rounded">
+            <span class="font-semibold"><%= type.to_s.titleize %>:</span>
+            <code class="text-lg font-mono bg-base-300 px-3 py-1 rounded"><%= ip %></code>
+          </div>
+        <% end %>
+      </div>
+      
+      <div class="alert alert-info mt-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Whitelist the <strong>External IP</strong> in Cloudflare to allow XML downloads.</span>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow p-6 mb-4">
+      <h2 class="text-2xl font-bold mb-4">Server Details</h2>
+      <div class="space-y-2">
+        <div class="flex justify-between p-2">
+          <span class="font-semibold">Hostname:</span>
+          <code class="font-mono"><%= @server_info[:hostname] %></code>
+        </div>
+        <div class="flex justify-between p-2">
+          <span class="font-semibold">Environment:</span>
+          <code class="font-mono"><%= @server_info[:rails_env] %></code>
+        </div>
+        <div class="flex justify-between p-2">
+          <span class="font-semibold">Ruby Version:</span>
+          <code class="font-mono"><%= @server_info[:ruby_version] %></code>
+        </div>
+        <div class="flex justify-between p-2">
+          <span class="font-semibold">Rails Version:</span>
+          <code class="font-mono"><%= @server_info[:rails_version] %></code>
+        </div>
+        <div class="flex justify-between p-2">
+          <span class="font-semibold">Timezone:</span>
+          <code class="font-mono"><%= @server_info[:timezone] %></code>
+        </div>
+        <div class="flex justify-between p-2">
+          <span class="font-semibold">Server Time:</span>
+          <code class="font-mono"><%= @server_info[:server_time].strftime('%Y-%m-%d %H:%M:%S %Z') %></code>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow p-6">
+      <h2 class="text-2xl font-bold mb-4">User Agent</h2>
+      <code class="block p-3 bg-base-200 rounded text-sm break-all"><%= @server_info[:user_agent] %></code>
+      
+      <div class="alert alert-warning mt-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <span>The XML fetcher uses a custom user agent. You may need to whitelist it in Cloudflare.</span>
+      </div>
+    </div>
+  </div>
+  <div class="w-0 md:w-52"></div>
+</div>

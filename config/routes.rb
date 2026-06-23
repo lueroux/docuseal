@@ -211,6 +211,7 @@ Rails.application.routes.draw do
     resources :ibcos, only: %i[index create], controller: 'ibcos_settings' do
       post :sync, on: :collection
     end
+    resource :server_info, only: :index, controller: 'server_info'
     unless Docuseal.multitenant?
       resources :storage, only: %i[index create], controller: 'storage_settings'
       resources :search_entries_reindex, only: %i[create]

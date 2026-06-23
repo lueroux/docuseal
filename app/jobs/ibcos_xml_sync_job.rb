@@ -10,10 +10,14 @@ class IbcosXmlSyncJob < ApplicationJob
     storage_path = Rails.root.join('tmp', 'ibcos_parts.xml')
     
     begin
-      # Download XML file
+      # Download XML file with headers to bypass Cloudflare
       response = Faraday.get(xml_url) do |req|
         req.options.timeout = 60
         req.options.open_timeout = 10
+        req.headers['User-Agent'] = 'Buxtons-Quote-Tool/1.0 (Rails; +https://docuseal-railway-production-38a4.up.railway.app)'
+        req.headers['Accept'] = 'application/xml, text/xml, */*'
+        req.headers['Accept-Encoding'] = 'gzip, deflate'
+        req.headers['Connection'] = 'keep-alive'
       end
       
       if response.success?
