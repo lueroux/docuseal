@@ -2,7 +2,8 @@
 
 class IbcosGoldService
   CACHE_TTL = 15.minutes
-  XML_FILE_PATH = Rails.root.join('tmp', 'ibcos_parts.xml')
+  # Use /data for persistent storage in production, tmp in development
+  XML_FILE_PATH = Rails.env.production? ? Pathname.new('/data/docuseal/ibcos_parts.xml') : Rails.root.join('tmp', 'ibcos_parts.xml')
 
   def self.search_parts(expression:, max_results: 25)
     Rails.cache.fetch("ibcos:search:#{expression}:#{max_results}", expires_in: CACHE_TTL) do

@@ -7,7 +7,8 @@ class IbcosXmlSyncJob < ApplicationJob
     Rails.logger.info 'Starting IBCOS XML sync...'
     
     xml_url = 'https://buxtons.net/goldxml/parts.xml'
-    storage_path = Rails.root.join('tmp', 'ibcos_parts.xml')
+    # Use /data for persistent storage across deployments
+    storage_path = Rails.env.production? ? Pathname.new('/data/docuseal/ibcos_parts.xml') : Rails.root.join('tmp', 'ibcos_parts.xml')
     
     begin
       # Download XML file with headers to bypass Cloudflare
