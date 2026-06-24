@@ -118,7 +118,7 @@ class WoocommerceProductSync
 
   def http_client
     @http_client ||= Faraday.new(url: woo_url) do |faraday|
-      faraday.request :basic_auth, woo_consumer_key, woo_consumer_secret
+      faraday.basic_auth(woo_consumer_key, woo_consumer_secret)
       faraday.request :url_encoded
       faraday.adapter Faraday.default_adapter
       faraday.options.timeout = 30

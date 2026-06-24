@@ -23,7 +23,7 @@ class ProductsController < ApplicationController
     @product = current_account.products.build(product_params)
 
     if @product.save
-      redirect_to @product, notice: 'Product was successfully created.'
+      redirect_to @product, notice: 'Product was successfully created.', allow_other_host: true
     else
       render :new, status: :unprocessable_content
     end
@@ -31,7 +31,7 @@ class ProductsController < ApplicationController
 
   def update
     if @product.update(product_params)
-      redirect_to @product, notice: 'Product was successfully updated.'
+      redirect_to @product, notice: 'Product was successfully updated.', allow_other_host: true
     else
       render :edit, status: :unprocessable_content
     end
@@ -47,9 +47,9 @@ class ProductsController < ApplicationController
     result = sync_service.sync_product!(@product.sku)
 
     if result[:success]
-      redirect_to @product, notice: 'Product synced from WooCommerce successfully.'
+      redirect_to @product, notice: 'Product synced from WooCommerce successfully.', allow_other_host: true
     else
-      redirect_to @product, alert: "Sync failed: #{result[:error]}"
+      redirect_to @product, alert: "Sync failed: #{result[:error]}", allow_other_host: true
     end
   end
 
