@@ -207,17 +207,20 @@ class WoocommerceProductSync
     end
   end
 
-  def parse_inkpos_response(data)
+  def parse_inkpos_response(response_body)
+    # inkpos API wraps product data in a 'data' key
+    data = response_body.is_a?(Hash) ? (response_body['data'] || response_body) : response_body
+
     {
       sku: data['sku'],
       name: data['model'] || data['sku'],
-      brand: extract_brand(data),
-      category: data['machine_type'],
-      description: nil, # inkpos-api doesn't return description
-      retail_price: parse_price(data['recommended_bundle_price'] || data['recommended_battery_price']),
-      cost_price: nil, # Not provided by inkpos-api
-      image_url: nil, # Would need separate endpoint for images
-      woocommerce_product_id: nil, # inkpos-api doesn't return product ID
+      brand: data['brand'] || extract_brand(data),
+      category: data['categories'] || data['machine_type'],
+      description: data['longer_description'] || data['long_desc'] || data['short_desc'],
+      retail_price: parse_price(data['pa_rrp'] || data['price'] || data['recommended_bundle_price'] || data['recommended_battery_price']),
+      cost_price: parse_price(data['price_ex_tax']),
+      image_url: nil,
+      woocommerce_product_id: nil,
       spec_data: {
         battery_system: data['battery_sys'],
         recommended_battery: data['recommended_battery'],
@@ -227,7 +230,10 @@ class WoocommerceProductSync
         recommended_charger_rrp: data['recommended_charger_rrp'],
         recommended_charger_price: data['recommended_charger_price'],
         recommended_bundle_rrp: data['recommended_bundle_rrp'],
-        recommended_bundle_price: data['recommended_bundle_price']
+        recommended_bundle_price: data['recommended_bundle_price'],
+        power_source: data['power_source'],
+        user_type: data['user_type'],
+        key_specs: data['key_specs']
       }.compact
     }
   end
