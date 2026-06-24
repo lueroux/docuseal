@@ -225,6 +225,10 @@ class QuoteWizardController < ApplicationController
   def update_item
     @quote_item = @quote.quote_items.find(params[:item_id])
     
+    if params[:quote_item][:option_ids].present?
+      sync_quote_item_options(@quote_item, params[:quote_item][:option_ids])
+    end
+
     if @quote_item.update(quote_item_params)
       respond_to do |format|
         format.turbo_stream do
@@ -234,6 +238,7 @@ class QuoteWizardController < ApplicationController
           ]
         end
         format.json { render json: { success: true, quote_item: @quote_item } }
+        format.html { redirect_back fallback_location: quote_wizard_path(@quote, step: 'options'), notice: 'Options updated.' }
       end
     else
       respond_to do |format|
@@ -241,6 +246,7 @@ class QuoteWizardController < ApplicationController
           render turbo_stream: turbo_stream.replace('form_errors', partial: 'shared/errors', locals: { object: @quote_item })
         end
         format.json { render json: { errors: @quote_item.errors }, status: :unprocessable_content }
+        format.html { redirect_back fallback_location: quote_wizard_path(@quote, step: 'options'), alert: @quote_item.errors.full_messages.to_sentence }
       end
     end
   end
@@ -397,7 +403,26 @@ class QuoteWizardController < ApplicationController
   def load_product_options
     @product_options = {}
     @quote.quote_items.each do |item|
-      @product_options[item.id] = item.product.product_options.order(:sort_order)
+      @product_options[item.id] = item.product.product_options.includes(:linked_product).order(:sort_order)
+    end
+  end
+
+  def sync_quote_item_options(quote_item, option_ids)
+    option_ids = Array(option_ids).map(&:to_i)
+    
+    # Remove unselected options
+    quote_item.quote_item_options.where.not(product_option_id: option_ids).destroy_all
+    
+    # Add newly selected options
+    option_ids.each do |option_id|
+      option = quote_item.product.product_options.find_by(id: option_id)
+      next unless option
+      
+      quote_item.quote_item_options.find_or_create_by!(product_option_id: option_id) do |qio|
+        qio.name = option.name
+        qio.price = option.price
+        qio.is_selected = true
+      end
     end
   end
 

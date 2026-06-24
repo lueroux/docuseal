@@ -15,7 +15,7 @@
 
             <% if product_options.any? %>
               <%= form_with model: quote_item, url: update_item_quote_wizard_path(@quote, item_id: quote_item.id),
-                  method: :patch, data: { turbo_frame: "quote_item_options_#{quote_item.id}" } do |f| %>
+                  method: :patch, local: true do |f| %>
                 
                 <div class="space-y-4">
                   <% product_options.each do |option| %>
@@ -26,12 +26,15 @@
                                value="<%= option.id %>"
                                <%= 'checked' if quote_item.quote_item_options.exists?(product_option_id: option.id, is_selected: true) %>
                                class="checkbox checkbox-primary"
-                               data-action="change->form#submit">
+                               onchange="this.form.requestSubmit()">
                         
                         <div>
                           <div class="font-medium"><%= option.name %></div>
                           <% if option.description.present? %>
                             <div class="text-sm text-base-content/70"><%= option.description %></div>
+                          <% end %>
+                          <% if option.linked_product %>
+                            <div class="text-xs text-primary mt-1">Linked: <%= option.linked_product.sku %></div>
                           <% end %>
                         </div>
                       </div>
@@ -44,15 +47,17 @@
                             Included
                           <% end %>
                         </div>
-                        <% if option.affects_compatibility %>
-                          <div class="badge badge-sm badge-warning">Affects Compatibility</div>
+                        <% if option.is_required %>
+                          <div class="badge badge-sm badge-warning">Required</div>
                         <% end %>
                       </div>
                     </div>
                   <% end %>
                 </div>
 
-                <turbo-frame id="quote_item_options_<%= quote_item.id %>"></turbo-frame>
+                <div class="mt-4 flex justify-end">
+                  <%= f.submit 'Save Options', class: 'btn btn-sm btn-primary' %>
+                </div>
               <% end %>
 
               <!-- Options Total -->
@@ -76,12 +81,14 @@
 
             <!-- Item Notes -->
             <%= form_with model: quote_item, url: update_item_quote_wizard_path(@quote, item_id: quote_item.id),
-                method: :patch, class: 'mt-4' do |f| %>
+                method: :patch, local: true, class: 'mt-4' do |f| %>
               <div class="form-control">
                 <%= f.label :notes, 'Product Notes (Optional)', class: 'label' %>
                 <%= f.text_area :notes, rows: 2, class: 'textarea textarea-bordered',
-                    placeholder: 'Add specific notes for this product...',
-                    data: { action: 'blur->form#submit' } %>
+                    placeholder: 'Add specific notes for this product...' %>
+              </div>
+              <div class="mt-2 flex justify-end">
+                <%= f.submit 'Save Notes', class: 'btn btn-xs btn-ghost' %>
               </div>
             <% end %>
           </div>
