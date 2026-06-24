@@ -1,53 +1,36 @@
-<div id="flash" class="toast toast-end toast-bottom z-50">
-  <div class="alert <%= flash[:notice] ? 'alert-success' : 'alert-error' %> shadow-lg animate-slide-in-right">
-    <div class="flex items-center gap-3">
-      <% if flash[:notice] %>
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+<% notice_text = local_assigns[:flash_notice].presence || flash[:notice].presence %>
+<% alert_text = local_assigns[:flash_alert].presence || flash[:alert].presence %>
+<% message = notice_text || alert_text %>
+<% if message.present? %>
+  <% flash_id = local_assigns[:flash_id] || 'flash' %>
+  <% toast_classes = local_assigns[:toast_classes] || 'toast toast-end toast-bottom z-50' %>
+  <% flash_duration = local_assigns[:flash_duration] || 5000 %>
+  <% status_class = notice_text.present? ? 'alert-success' : 'alert-error' %>
+
+  <flash-toast id="<%= flash_id %>"
+               class="<%= toast_classes %>"
+               data-duration="<%= flash_duration %>">
+    <div class="alert <%= status_class %> shadow-lg animate-slide-in-right" role="status">
+      <div class="flex items-center gap-3">
+        <% if notice_text.present? %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        <% else %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        <% end %>
+        <span><%= message %></span>
+      </div>
+      <button type="button"
+              class="btn btn-sm btn-ghost btn-circle"
+              data-flash-toast-dismiss
+              aria-label="Dismiss notification">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
-      <% else %>
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      <% end %>
-      <span><%= flash[:notice] || flash[:alert] %></span>
+      </button>
     </div>
-    <button type="button" class="btn btn-sm btn-ghost btn-circle" onclick="this.closest('#flash').remove()">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
-  </div>
-</div>
-
-<style>
-  @keyframes slide-in-right {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-  
-  .animate-slide-in-right {
-    animation: slide-in-right 0.3s ease-out;
-  }
-  
-  #flash {
-    position: fixed;
-  }
-</style>
-
-<script>
-  // Auto-dismiss after 5 seconds
-  setTimeout(() => {
-    const flash = document.getElementById('flash');
-    if (flash) {
-      flash.style.animation = 'slide-in-right 0.3s ease-out reverse';
-      setTimeout(() => flash.remove(), 300);
-    }
-  }, 5000);
-</script>
+  </flash-toast>
+<% end %>

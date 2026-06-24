@@ -51,7 +51,7 @@ export default targetable(class extends HTMLElement {
 
     this.folderCards.forEach((el) => el.classList.remove('bg-base-200', 'before:hidden'))
     this.folderDropzone?.classList?.remove('hidden')
-    window.flash?.remove()
+    document.querySelectorAll('flash-toast').forEach((toast) => toast.remove())
 
     e.dataTransfer.effectAllowed = 'move'
 

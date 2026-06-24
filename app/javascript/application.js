@@ -56,14 +56,18 @@ import BarChart from './elements/bar_chart'
 import FieldCondition from './elements/field_condition'
 import ConfirmUpload from './elements/confirm_upload'
 import IbcosLookup from './elements/ibcos_lookup'
+import FlashToast from './elements/flash_toast'
 
 import * as TurboInstantClick from './lib/turbo_instant_click'
 
 TurboInstantClick.start()
 
-document.addEventListener('turbo:before-cache', () => {
+const removeFlashToasts = () => {
+  document.querySelectorAll('flash-toast').forEach((toast) => toast.remove())
   window.flash?.remove()
-})
+}
+
+document.addEventListener('turbo:before-cache', removeFlashToasts)
 
 document.addEventListener('keyup', (e) => {
   if (e.code === 'Escape') {
@@ -150,6 +154,7 @@ safeRegisterElement('bar-chart', BarChart)
 safeRegisterElement('field-condition', FieldCondition)
 safeRegisterElement('confirm-upload', ConfirmUpload)
 safeRegisterElement('ibcos-lookup', IbcosLookup)
+safeRegisterElement('flash-toast', FlashToast)
 
 safeRegisterElement('template-builder', class extends HTMLElement {
   connectedCallback () {
