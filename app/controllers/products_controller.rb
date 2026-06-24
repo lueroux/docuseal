@@ -38,8 +38,15 @@ class ProductsController < ApplicationController
   end
 
   def destroy
-    @product.destroy
-    redirect_to products_path, notice: 'Product was successfully deleted.'
+    if @product.destroy
+      redirect_to products_path, notice: 'Product was successfully deleted.'
+    else
+      redirect_to @product, alert: "Could not delete product: #{@product.errors.full_messages.to_sentence}"
+    end
+  rescue => e
+    Rails.logger.error("Product deletion failed: #{e.class} - #{e.message}")
+    Rails.logger.error(e.backtrace.join("\n"))
+    redirect_to @product, alert: "Could not delete product: #{e.message}"
   end
 
   def sync
