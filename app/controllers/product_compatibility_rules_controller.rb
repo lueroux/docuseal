@@ -6,7 +6,7 @@ class ProductCompatibilityRulesController < ApplicationController
   before_action :set_product_compatibility_rule, only: %i[destroy]
 
   def index
-    @rules = @product.product_compatibility_rules
+    @product_compatibility_rules = @product.product_compatibility_rules
   end
 
   def create
