@@ -279,6 +279,26 @@ class WoocommerceProductSync
     # inkpos API wraps product data in a 'data' key
     data = response_body.is_a?(Hash) ? (response_body['data'] || response_body) : response_body
 
+    # Parse key_specs string into individual attributes
+    woo_attributes = {}
+    if data['key_specs'].present?
+      # Format: "Key Specs > Power Source - Battery > Engine/Battery Type - Lithium Ion > Cutting Height Min - 20 mm"
+      key_specs = data['key_specs']
+      if key_specs.include?('>')
+        # Split by ' > ' to get individual spec pairs
+        specs = key_specs.split(' > ').map(&:strip)
+        specs.each do |spec|
+          # Split by ' - ' to get key and value
+          if spec.include?(' - ')
+            key, value = spec.split(' - ', 2).map(&:strip)
+            # Convert to snake_case for the key
+            snake_key = key.downcase.gsub(/\s+/, '_').gsub(/[^\w_]/, '')
+            woo_attributes[snake_key] = value
+          end
+        end
+      end
+    end
+
     {
       sku: data['sku'],
       name: data['model'] || data['sku'],
@@ -300,9 +320,9 @@ class WoocommerceProductSync
         recommended_bundle_rrp: data['recommended_bundle_rrp'],
         recommended_bundle_price: data['recommended_bundle_price'],
         power_source: data['power_source'],
-        user_type: data['user_type'],
-        key_specs: data['key_specs']
-      }.compact
+        user_type: data['user_type']
+      }.compact,
+      woo_attributes: woo_attributes
     }
   end
 
