@@ -17,42 +17,72 @@
               <%= form_with model: quote_item, url: update_item_quote_wizard_path(@quote, item_id: quote_item.id),
                   method: :patch, local: true do |f| %>
                 
-                <div class="space-y-4">
-                  <% product_options.each do |option| %>
-                    <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                      <div class="flex items-center gap-3">
-                        <input type="checkbox" 
-                               name="quote_item[option_ids][]" 
-                               value="<%= option.id %>"
-                               <%= 'checked' if quote_item.quote_item_options.exists?(product_option_id: option.id, is_selected: true) %>
-                               class="checkbox checkbox-primary"
-                               onchange="this.form.requestSubmit()">
-                        
-                        <div>
-                          <div class="font-medium"><%= option.name %></div>
-                          <% if option.description.present? %>
-                            <div class="text-sm text-base-content/70"><%= option.description %></div>
-                          <% end %>
-                          <% if option.linked_product %>
-                            <div class="text-xs text-primary mt-1">Linked: <%= option.linked_product.sku %></div>
-                          <% end %>
-                        </div>
-                      </div>
-
-                      <div class="text-right">
-                        <div class="font-bold">
-                          <% if option.price > 0 %>
-                            +£<%= number_with_precision(option.price, precision: 2, delimiter: ',') %>
-                          <% else %>
-                            Included
-                          <% end %>
-                        </div>
-                        <% if option.is_required %>
-                          <div class="badge badge-sm badge-warning">Required</div>
-                        <% end %>
-                      </div>
-                    </div>
-                  <% end %>
+                <div class="overflow-x-auto">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th class="w-12"></th>
+                        <th>Option</th>
+                        <th class="text-right">Cost</th>
+                        <th class="text-right">Retail</th>
+                        <th class="text-right">Option Price</th>
+                        <th class="text-right">Margin</th>
+                        <th>Required</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% product_options.each do |option| %>
+                        <% linked = option.linked_product %>
+                        <% cost = linked&.cost_price || 0 %>
+                        <% retail = linked&.retail_price || option.price %>
+                        <% margin = cost > 0 ? (((retail - cost) / cost) * 100).round(1) : 0 %>
+                        <tr>
+                          <td>
+                            <input type="checkbox" 
+                                   name="quote_item[option_ids][]" 
+                                   value="<%= option.id %>"
+                                   <%= 'checked' if quote_item.quote_item_options.exists?(product_option_id: option.id, is_selected: true) %>
+                                   class="checkbox checkbox-primary checkbox-sm"
+                                   onchange="this.form.requestSubmit()">
+                          </td>
+                          <td>
+                            <div class="font-medium"><%= option.name %></div>
+                            <% if option.description.present? %>
+                              <div class="text-xs text-base-content/70"><%= option.description %></div>
+                            <% end %>
+                            <% if linked %>
+                              <div class="text-xs text-primary mt-1">SKU: <%= linked.sku %></div>
+                            <% end %>
+                          </td>
+                          <td class="text-right font-mono text-sm">
+                            <%= cost > 0 ? number_to_currency(cost) : '-' %>
+                          </td>
+                          <td class="text-right font-mono text-sm">
+                            <%= retail > 0 ? number_to_currency(retail) : '-' %>
+                          </td>
+                          <td class="text-right font-mono text-sm font-bold">
+                            <% if option.price > 0 %>
+                              +<%= number_to_currency(option.price) %>
+                            <% else %>
+                              <span class="text-success">Included</span>
+                            <% end %>
+                          </td>
+                          <td class="text-right">
+                            <% if margin > 0 %>
+                              <span class="badge badge-sm <%= margin >= 30 ? 'badge-success' : margin >= 15 ? 'badge-warning' : 'badge-error' %>"><%= margin %>%</span>
+                            <% else %>
+                              <span class="text-base-content/50">-</span>
+                            <% end %>
+                          </td>
+                          <td>
+                            <% if option.is_required %>
+                              <span class="badge badge-sm badge-warning">Required</span>
+                            <% end %>
+                          </td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
                 </div>
 
                 <div class="mt-4 flex justify-end">

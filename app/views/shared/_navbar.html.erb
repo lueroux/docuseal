@@ -9,6 +9,7 @@
     <div class="space-x-4 flex items-center">
       <div class="flex items-center justify-center space-x-4 mr-1">
         <%= render 'shared/navbar_buttons' %>
+        <%= link_to 'New Quote', new_quote_wizard_path, class: 'btn btn-sm btn-primary' %>
         <%= link_to 'Quotes', quotes_path, class: 'hidden md:inline-flex font-medium text-lg' %>
         <%= link_to 'Products', products_path, class: 'hidden md:inline-flex font-medium text-lg' %>
         <%= link_to 'Companies', companies_path, class: 'hidden md:inline-flex font-medium text-lg' %>
