@@ -44,7 +44,7 @@ class WoocommerceProductSync
   def fetch_product_id_by_sku(sku)
     return nil unless configured?
 
-    response = http_client.get("/wp-json/wc/v3/products", params: { sku: })
+    response = http_client.get("/wp-json/wc/v3/products?sku=#{CGI.escape(sku)}")
 
     logger.info("WooCommerce product ID lookup for SKU #{sku}: status=#{response.status}, body=#{response.body.inspect}")
 
@@ -76,7 +76,7 @@ class WoocommerceProductSync
     response = if sku_or_id.to_s.match?(/\A\d+\z/)
                  http_client.get("/wp-json/wc/v3/products/#{sku_or_id}")
                else
-                 http_client.get("/wp-json/wc/v3/products", params: { sku: sku_or_id })
+                 http_client.get("/wp-json/wc/v3/products?sku=#{CGI.escape(sku_or_id)}")
                end
 
     logger.info("Standard WC API fetch for #{sku_or_id}: status=#{response.status}, body=#{response.body.inspect}")
@@ -130,15 +130,28 @@ class WoocommerceProductSync
     end
 
     # Fetch product data from WooCommerce (prefer custom inkpos-api first for battery specs)
-    woo_data = fetch_by_sku(sku)
-    logger.info("inkpos-api result: #{woo_data.inspect}")
+    inkpos_data = fetch_by_sku(sku)
+    logger.info("inkpos-api result: #{inkpos_data.inspect}")
 
-    # Fallback to standard WooCommerce REST API if inkpos-api does not return the product
-    if woo_data.nil?
-      # Always search by SKU to ensure we get the correct product
-      logger.info("Falling back to standard WC API with SKU: #{sku.inspect}")
-      woo_data = fetch_from_standard_wc(sku)
-      logger.info("Standard WC API result: #{woo_data.inspect}")
+    # Also fetch from standard WC API to get image URL and product ID
+    standard_data = fetch_from_standard_wc(sku)
+    logger.info("Standard WC API result: #{standard_data.inspect}")
+
+    # Merge data: prefer inkpos for spec_data, but use standard WC for image_url and product ID
+    if inkpos_data && standard_data
+      woo_data = inkpos_data.merge(
+        image_url: standard_data[:image_url],
+        woocommerce_product_id: standard_data[:woocommerce_product_id]
+      )
+      logger.info("Merged inkpos and standard WC data")
+    elsif inkpos_data
+      woo_data = inkpos_data
+      logger.info("Using inkpos data only")
+    elsif standard_data
+      woo_data = standard_data
+      logger.info("Using standard WC data only")
+    else
+      woo_data = nil
     end
 
     return { success: false, error: 'Product not found in WooCommerce' } unless woo_data
