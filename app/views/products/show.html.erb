@@ -10,56 +10,84 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-  <div class="lg:col-span-2">
+  <div class="lg:col-span-2 space-y-6">
+    <!-- Product Image and Basic Info -->
     <div class="card bg-base-100 shadow">
       <div class="card-body">
-        <h2 class="card-title">Product Details</h2>
-        <div class="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <span class="font-semibold">SKU:</span>
-            <span class="ml-2"><%= @product.sku %></span>
-          </div>
-          <div>
-            <span class="font-semibold">Brand:</span>
-            <span class="ml-2"><%= @product.brand || 'N/A' %></span>
-          </div>
-          <div>
-            <span class="font-semibold">Category:</span>
-            <span class="ml-2"><%= @product.category || 'N/A' %></span>
-          </div>
-          <div>
-            <span class="font-semibold">Available:</span>
-            <span class="ml-2">
-              <%= content_tag :span, @product.available? ? 'Yes' : 'No',
-                  class: "badge #{@product.available? ? 'badge-success' : 'badge-error'}" %>
-            </span>
-          </div>
-          <div>
-            <span class="font-semibold">WooCommerce ID:</span>
-            <span class="ml-2"><%= @product.woocommerce_product_id || 'N/A' %></span>
-          </div>
-          <div>
-            <span class="font-semibold">Last Sync:</span>
-            <span class="ml-2">
-              <% if @product.synced? %>
-                <%= time_ago_in_words(@product.synced_at) %> ago
-              <% else %>
-                <span class="text-base-content/50">Not synced</span>
-              <% end %>
-            </span>
+        <div class="flex gap-6">
+          <% if @product.image_url.present? %>
+            <div class="flex-shrink-0">
+              <%= image_tag @product.image_url, class: 'w-48 h-48 object-contain rounded-lg', alt: @product.name %>
+            </div>
+          <% end %>
+          <div class="flex-1">
+            <h2 class="card-title text-2xl"><%= @product.name %></h2>
+            <div class="mt-2 text-sm text-base-content/70">
+              <div class="grid grid-cols-2 gap-2">
+                <div><span class="font-semibold">SKU:</span> <%= @product.sku %></div>
+                <div><span class="font-semibold">Brand:</span> <%= @product.brand || 'N/A' %></div>
+                <div><span class="font-semibold">Category:</span> <%= @product.category || 'N/A' %></div>
+                <div>
+                  <span class="font-semibold">Available:</span>
+                  <%= content_tag :span, @product.available? ? 'Yes' : 'No',
+                      class: "badge #{@product.available? ? 'badge-success' : 'badge-error'} ml-1" %>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-
-        <% if @product.description.present? %>
-          <div class="mt-4">
-            <span class="font-semibold">Description:</span>
-            <p class="mt-2"><%= @product.description %></p>
-          </div>
-        <% end %>
       </div>
     </div>
 
-    <div class="card bg-base-100 shadow mt-6">
+    <!-- Description -->
+    <% if @product.description.present? || @product.short_description.present? %>
+      <div class="card bg-base-100 shadow">
+        <div class="card-body">
+          <h2 class="card-title">Description</h2>
+          <% if @product.short_description.present? %>
+            <p class="text-base-content/80 mt-2"><%= @product.short_description %></p>
+          <% end %>
+          <% if @product.description.present? %>
+            <div class="prose prose-sm max-w-none mt-4">
+              <%= @product.description %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Product Specs -->
+    <% if @product.spec_data.present? || @product.woo_attributes.present? %>
+      <div class="card bg-base-100 shadow">
+        <div class="card-body">
+          <h2 class="card-title">Specifications</h2>
+          <div class="mt-4 space-y-2">
+            <% @product.spec_data.each do |key, value| %>
+              <% next if value.blank? %>
+              <div class="flex justify-between border-b border-base-200 pb-2">
+                <span class="font-semibold"><%= key.humanize %>:</span>
+                <span class="text-base-content/80"><%= value %></span>
+              </div>
+            <% end %>
+
+            <% @product.woo_attributes.each do |key, value| %>
+              <% next if value.blank? %>
+              <% visibility = @product.attribute_visibility.dig(key) %>
+              <% next if visibility && !visibility['visible_on_detail_page'] %>
+              <div class="flex justify-between border-b border-base-200 pb-2">
+                <span class="font-semibold"><%= visibility&.dig('label') || key.humanize %>:</span>
+                <span class="text-base-content/80">
+                  <%= value.is_a?(Array) ? value.join(', ') : value %>
+                </span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Pricing -->
+    <div class="card bg-base-100 shadow">
       <div class="card-body">
         <h2 class="card-title">Pricing</h2>
         <div class="grid grid-cols-2 gap-4 mt-4">
@@ -80,17 +108,32 @@
     </div>
   </div>
 
-  <div>
-    <% if @product.image_url.present? %>
-      <div class="card bg-base-100 shadow">
-        <div class="card-body">
-          <h2 class="card-title">Product Image</h2>
-          <%= image_tag @product.image_url, class: 'w-full h-48 object-contain rounded-lg mt-4', alt: @product.name %>
+  <div class="space-y-6">
+    <!-- Quick Actions -->
+    <div class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">Quick Actions</h2>
+        <div class="space-y-2 mt-4">
+          <div class="text-sm">
+            <span class="font-semibold">WooCommerce ID:</span>
+            <span class="ml-2"><%= @product.woocommerce_product_id || 'N/A' %></span>
+          </div>
+          <div class="text-sm">
+            <span class="font-semibold">Last Sync:</span>
+            <span class="ml-2">
+              <% if @product.synced? %>
+                <%= time_ago_in_words(@product.synced_at) %> ago
+              <% else %>
+                <span class="text-base-content/50">Not synced</span>
+              <% end %>
+            </span>
+          </div>
         </div>
       </div>
-    <% end %>
+    </div>
 
-    <div class="card bg-base-100 shadow mt-6">
+    <!-- Product Options -->
+    <div class="card bg-base-100 shadow">
       <div class="card-body">
         <h2 class="card-title">Product Options</h2>
         <div class="mt-4">
@@ -113,7 +156,8 @@
       </div>
     </div>
 
-    <div class="card bg-base-100 shadow mt-6">
+    <!-- Compatibility Rules -->
+    <div class="card bg-base-100 shadow">
       <div class="card-body">
         <h2 class="card-title">Compatibility Rules</h2>
         <div class="mt-4">
