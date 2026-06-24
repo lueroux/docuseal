@@ -53,11 +53,13 @@
 
     <div class="card bg-base-100 shadow p-4">
       <div class="flex gap-2 items-center">
-        <%= button_to 'Test Connection', test_connection_settings_woocommerce_path, method: :post, class: 'btn btn-secondary' do %>
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <%= button_to test_connection_settings_woocommerce_path,
+                      method: :post,
+                      class: 'btn btn-secondary flex items-center gap-2' do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Test Connection
+          <span>Test Connection</span>
         <% end %>
         <div id="woo_test_status" class="text-sm"></div>
       </div>
