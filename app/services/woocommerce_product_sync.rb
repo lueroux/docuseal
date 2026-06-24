@@ -49,8 +49,17 @@ class WoocommerceProductSync
     products = response.body
     return nil unless products.is_a?(Array) && products.any?
 
-    logger.info("WooCommerce product ID found for SKU #{sku}: #{products.first['id']}")
-    products.first['id']
+    # Validate that the returned product's SKU matches what we searched for
+    returned_product = products.first
+    returned_sku = returned_product['sku']
+    
+    if returned_sku != sku
+      logger.warn("WooCommerce SKU mismatch: searched for '#{sku}' but got product with SKU '#{returned_sku}' (ID: #{returned_product['id']})")
+      return nil
+    end
+
+    logger.info("WooCommerce product ID found for SKU #{sku}: #{returned_product['id']}")
+    returned_product['id']
   rescue StandardError => e
     logger.error("WooCommerce product ID fetch error for SKU #{sku}: #{e.message}")
     nil
@@ -73,6 +82,12 @@ class WoocommerceProductSync
     data = response.body
     product_data = data.is_a?(Array) ? data.first : data
     return nil unless product_data
+
+    # If we searched by SKU, validate the returned product's SKU matches
+    if !sku_or_id.to_s.match?(/\A\d+\z/) && product_data['sku'] != sku_or_id
+      logger.warn("WooCommerce SKU mismatch in standard API: searched for '#{sku_or_id}' but got product with SKU '#{product_data['sku']}'")
+      return nil
+    end
 
     parse_standard_wc_response(product_data)
   rescue StandardError => e
