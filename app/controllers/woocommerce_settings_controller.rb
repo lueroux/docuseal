@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 class WoocommerceSettingsController < ApplicationController
-  authorize_resource class: false
+  before_action do
+    authorize!(:manage, :woocommerce_settings)
+  end
   before_action :set_configs
 
   def show; end

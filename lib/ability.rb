@@ -28,7 +28,7 @@ class Ability
     can :manage, Product, account_id: user.account_id
     can :manage, ProductOption, product: { account_id: user.account_id }
     can :manage, ProductCompatibilityRule, product: { account_id: user.account_id }
-    can :manage, WoocommerceSettingsController
+    can :manage, :woocommerce_settings
     can :manage, Quote, account_id: user.account_id
     can :manage, QuoteItem, quote: { account_id: user.account_id }
     can :create, QuoteItem
