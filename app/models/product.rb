@@ -12,6 +12,8 @@ class Product < ApplicationRecord
   validates :cost_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :markup_percentage, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
+  before_update :mark_changed_fields_as_manually_edited
+
   scope :available, -> { where(available: true) }
   scope :by_brand, ->(brand) { where(brand:) }
   scope :by_category, ->(category) { where(category:) }
@@ -42,5 +44,17 @@ class Product < ApplicationRecord
     return retail_price if cost_price.blank? || markup_percentage.blank?
 
     (cost_price * (1 + markup_percentage / 100.0)).round(2)
+  end
+
+  private
+
+  def mark_changed_fields_as_manually_edited
+    # Auto-mark non-price fields as manually edited when they change in the admin
+    # Price is intentionally excluded so website data can keep quotes current
+    protected_fields = %w[name brand category description image_url woocommerce_product_id]
+
+    protected_fields.each do |field|
+      mark_manually_edited(field) if saved_change_to_attribute?(field)
+    end
   end
 end

@@ -1,6 +1,9 @@
 <div class="flex justify-between items-center mb-6">
   <h1 class="text-2xl font-bold">Products</h1>
-  <%= link_to 'New Product', new_product_path, class: 'btn btn-primary' %>
+  <div class="flex gap-2">
+    <%= link_to 'Sync All from WooCommerce', sync_all_products_path, method: :post, class: 'btn btn-secondary', data: { turbo_method: :post, turbo_confirm: 'Sync all products from WooCommerce? This may take a while.' } %>
+    <%= link_to 'New Product', new_product_path, class: 'btn btn-primary' %>
+  </div>
 </div>
 
 <div class="card bg-base-100 shadow">
@@ -14,6 +17,7 @@
           <th>Category</th>
           <th>Retail Price</th>
           <th>Available</th>
+          <th>Synced</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -30,8 +34,16 @@
                   class: "badge #{product.available? ? 'badge-success' : 'badge-error'}" %>
             </td>
             <td>
+              <% if product.synced? %>
+                <%= content_tag :span, '✓', class: 'badge badge-success', title: "Synced #{time_ago_in_words(product.synced_at)} ago" %>
+              <% else %>
+                <%= content_tag :span, '—', class: 'badge badge-ghost', title: 'Not synced' %>
+              <% end %>
+            </td>
+            <td>
               <%= link_to 'View', product, class: 'btn btn-sm btn-ghost' %>
               <%= link_to 'Edit', edit_product_path(product), class: 'btn btn-sm btn-ghost' %>
+              <%= link_to 'Sync', sync_product_path(product), method: :post, class: 'btn btn-sm btn-secondary btn-ghost', data: { turbo_method: :post, turbo_confirm: 'Sync with WooCommerce?' } %>
               <%= button_to 'Delete', product, method: :delete,
                   class: 'btn btn-sm btn-error btn-ghost',
                   data: { turbo_confirm: 'Are you sure?' } %>

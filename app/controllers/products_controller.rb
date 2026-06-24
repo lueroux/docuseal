@@ -53,6 +53,17 @@ class ProductsController < ApplicationController
     end
   end
 
+  def sync_all
+    sync_service = WooCommerceProductSync.new(current_account)
+    results = sync_service.sync_all!
+
+    if results[:failed].zero?
+      redirect_to products_path, notice: "All #{results[:synced]} products synced successfully."
+    else
+      redirect_to products_path, alert: "Synced #{results[:synced]} products, #{results[:failed]} failed."
+    end
+  end
+
   private
 
   def set_product
