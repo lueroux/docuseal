@@ -2,7 +2,7 @@
 
 class ProductsController < ApplicationController
   authorize_resource
-  before_action :set_product, only: %i[show edit update destroy]
+  before_action :set_product, only: %i[show edit update destroy sync]
 
   def index
     @products = current_account.products.order(:brand, :name)
