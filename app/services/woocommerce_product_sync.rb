@@ -371,7 +371,7 @@ class WoocommerceProductSync
         unless product.attribute_visibility.key?(key)
           product.attribute_visibility[key] = {
             'visible_on_detail_page' => true,
-            'label' => key.humanize
+            'label' => key.to_s.humanize
           }
         end
       end

@@ -47,7 +47,7 @@ class Product < ApplicationRecord
   end
 
   def attribute_label(key)
-    attribute_visibility&.dig(key, 'label') || key.humanize
+    attribute_visibility&.dig(key, 'label') || key.to_s.humanize
   end
 
   def calculate_retail_price

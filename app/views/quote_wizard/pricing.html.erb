@@ -214,7 +214,7 @@
               <% quote_item.product.spec_data.each do |key, value| %>
                 <% next if value.blank? %>
                 <div class="border-b border-base-200 pb-1">
-                  <span class="font-semibold"><%= key.humanize %>:</span>
+                  <span class="font-semibold"><%= key.to_s.humanize %>:</span>
                   <span class="ml-2"><%= value %></span>
                 </div>
               <% end %>

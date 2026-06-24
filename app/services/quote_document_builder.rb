@@ -327,7 +327,7 @@ class QuoteDocumentBuilder
     if product.spec_data.is_a?(Hash)
       product.spec_data.each do |key, value|
         next if value.blank?
-        spec_rows << "<tr><td>#{key.humanize}</td><td>#{value}</td></tr>"
+        spec_rows << "<tr><td>#{key.to_s.humanize}</td><td>#{value}</td></tr>"
       end
     end
     if product.woo_attributes.is_a?(Hash)

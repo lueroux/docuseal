@@ -65,7 +65,7 @@
             <% @product.spec_data.each do |key, value| %>
               <% next if value.blank? %>
               <div class="flex justify-between border-b border-base-200 pb-2">
-                <span class="font-semibold"><%= key.humanize %>:</span>
+                <span class="font-semibold"><%= key.to_s.humanize %>:</span>
                 <span class="text-base-content/80"><%= value %></span>
               </div>
             <% end %>
