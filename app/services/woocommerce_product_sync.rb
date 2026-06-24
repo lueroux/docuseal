@@ -279,14 +279,20 @@ class WoocommerceProductSync
     # inkpos API wraps product data in a 'data' key
     data = response_body.is_a?(Hash) ? (response_body['data'] || response_body) : response_body
 
+    logger.info("key_specs raw value: #{data['key_specs'].inspect}")
+
     # Parse key_specs string into individual attributes
     woo_attributes = {}
     if data['key_specs'].present?
       # Format: "Key Specs > Power Source - Battery > Engine/Battery Type - Lithium Ion > Cutting Height Min - 20 mm"
       key_specs = data['key_specs']
+      logger.info("Parsing key_specs: #{key_specs}")
+      
       if key_specs.include?('>')
         # Split by ' > ' to get individual spec pairs
         specs = key_specs.split(' > ').map(&:strip)
+        logger.info("Split specs: #{specs.inspect}")
+        
         specs.each do |spec|
           # Split by ' - ' to get key and value
           if spec.include?(' - ')
@@ -294,10 +300,17 @@ class WoocommerceProductSync
             # Convert to snake_case for the key
             snake_key = key.downcase.gsub(/\s+/, '_').gsub(/[^\w_]/, '')
             woo_attributes[snake_key] = value
+            logger.info("Added attribute: #{snake_key} = #{value}")
+          else
+            logger.info("Skipping spec without ' - ': #{spec}")
           end
         end
+      else
+        logger.info("key_specs does not contain ' > ' separator")
       end
     end
+
+    logger.info("Final woo_attributes from key_specs: #{woo_attributes.inspect}")
 
     {
       sku: data['sku'],
