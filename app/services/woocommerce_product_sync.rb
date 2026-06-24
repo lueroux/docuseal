@@ -100,6 +100,46 @@ class WoocommerceProductSync
   end
 
   def parse_standard_wc_response(data)
+    # Capture all WooCommerce attributes
+    woo_attributes = {
+      short_description: data['short_description'],
+      stock_status: data['stock_status'],
+      weight: parse_price(data['weight']),
+      dimensions: data['dimensions'],
+      dimensions_length: parse_price(data['dimensions']&.[]('length')),
+      dimensions_width: parse_price(data['dimensions']&.[]('width')),
+      dimensions_height: parse_price(data['dimensions']&.[]('height')),
+      permalink: data['permalink'],
+      date_on_sale_from: data['date_on_sale_from'],
+      date_on_sale_to: data['date_on_sale_to'],
+      sale_price: parse_price(data['sale_price']),
+      regular_price: parse_price(data['regular_price']),
+      manage_stock: data['manage_stock'],
+      stock_quantity: data['stock_quantity'],
+      backorders: data['backorders'],
+      sold_individually: data['sold_individually'],
+      virtual: data['virtual'],
+      downloadable: data['downloadable'],
+      tax_class: data['tax_class'],
+      tax_status: data['tax_status'],
+      shipping_class: data['shipping_class'],
+      external_url: data['external_url'],
+      button_text: data['button_text'],
+      menu_order: data['menu_order'],
+      reviews_allowed: data['reviews_allowed'],
+      average_rating: parse_price(data['average_rating']),
+      rating_count: data['rating_count'],
+      total_sales: data['total_sales']
+    }.compact
+
+    # Store all custom attributes from WooCommerce
+    if data['attributes'].is_a?(Array)
+      data['attributes'].each do |attr|
+        next unless attr['name'].present?
+        woo_attributes[attr['name']] = attr['options']
+      end
+    end
+
     {
       sku: data['sku'],
       name: data['name'] || data['sku'],
@@ -110,7 +150,8 @@ class WoocommerceProductSync
       cost_price: nil,
       image_url: data['images']&.first&.[]('src'),
       woocommerce_product_id: data['id'],
-      spec_data: {}
+      spec_data: {},
+      woo_attributes: woo_attributes
     }
   end
 
@@ -316,6 +357,23 @@ class WoocommerceProductSync
     if woo_data[:spec_data].present?
       product.spec_data ||= {}
       product.spec_data = product.spec_data.merge(woo_data[:spec_data])
+    end
+
+    # Store all WooCommerce attributes
+    if woo_data[:woo_attributes].present?
+      product.woo_attributes ||= {}
+      product.woo_attributes = product.woo_attributes.merge(woo_data[:woo_attributes])
+
+      # Initialize attribute visibility for new attributes
+      product.attribute_visibility ||= {}
+      woo_data[:woo_attributes].each do |key, value|
+        unless product.attribute_visibility.key?(key)
+          product.attribute_visibility[key] = {
+            'visible_on_detail_page' => true,
+            'label' => key.humanize
+          }
+        end
+      end
     end
   end
 end
