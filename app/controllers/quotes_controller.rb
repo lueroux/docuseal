@@ -9,6 +9,7 @@ class QuotesController < ApplicationController
   end
 
   def show
+    Rails.logger.info("QuotesController#show called, format: #{request.format.symbol}")
     respond_to do |format|
       format.html
       format.pdf do
@@ -84,7 +85,9 @@ class QuotesController < ApplicationController
   private
 
   def set_quote
+    Rails.logger.info("set_quote called with id: #{params[:id]}")
     @quote = Quote.find(params[:id])
+    Rails.logger.info("set_quote found quote: #{@quote.id}")
   end
 
   def quote_params
