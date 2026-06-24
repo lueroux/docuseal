@@ -104,4 +104,4 @@ ENV VIPS_MAX_COORD=17000
 ENV VIPS_BLOCK_UNTRUSTED=1
 
 EXPOSE 3000
-CMD ["/app/bin/bundle", "exec", "puma", "-C", "/app/config/puma.rb", "--dir", "/app"]
+CMD /app/bin/bundle exec rails db:migrate && /app/bin/bundle exec puma -C /app/config/puma.rb --dir /app
