@@ -32,6 +32,9 @@
       <li>
         <%= link_to 'IBCOS Gold', settings_ibcos_path, class: 'text-base hover:bg-base-300' %>
       </li>
+      <li>
+        <%= link_to 'WooCommerce', settings_woocommerce_path, class: 'text-base hover:bg-base-300' %>
+      </li>
       <% if can?(:read, AccountConfig) %>
         <li>
           <%= link_to 'Notifications', settings_notifications_path, class: 'text-base hover:bg-base-300' %>

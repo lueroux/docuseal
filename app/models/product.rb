@@ -16,6 +16,24 @@ class Product < ApplicationRecord
   scope :by_brand, ->(brand) { where(brand:) }
   scope :by_category, ->(category) { where(category:) }
 
+  # Manual edit flags - keys that have been manually edited and shouldn't be overwritten by sync
+  def manually_edited?(field)
+    manual_edit_flags&.dig(field) == true
+  end
+
+  def mark_manually_edited(field)
+    self.manual_edit_flags ||= {}
+    self.manual_edit_flags[field] = true
+  end
+
+  def clear_manual_edit_flag(field)
+    manual_edit_flags&.delete(field)
+  end
+
+  def synced?
+    synced_at.present?
+  end
+
   def display_name
     "#{brand} #{name} (#{sku})".strip
   end

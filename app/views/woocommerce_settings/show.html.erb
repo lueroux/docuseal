@@ -1,0 +1,83 @@
+<div class="flex flex-wrap space-y-4 md:flex-nowrap md:space-y-0">
+  <%= render 'shared/settings_nav' %>
+  <div class="flex-grow max-w-xl mx-auto">
+    <h1 class="text-4xl font-bold mb-2">WooCommerce</h1>
+    <p class="text-base-content/70 mb-6">
+      Connect to your WooCommerce store to sync product data, images, and pricing for quotes.
+      Requires the <strong>inkpos-api</strong> and <strong>variants-via-api</strong> plugins installed on your WordPress site.
+    </p>
+
+    <%= form_with url: settings_woocommerce_path, method: :patch, html: { autocomplete: 'off', class: 'space-y-4' } do |f| %>
+      <div class="form-control">
+        <%= f.label :woocommerce_url, 'WooCommerce Site URL', class: 'label' %>
+        <%= f.url_field :woocommerce_url, value: @woo_url, required: true,
+                         placeholder: 'https://buxtons.net',
+                         class: 'base-input' %>
+        <label class="label">
+          <span class="label-text-alt">The full URL of your WordPress/WooCommerce site</span>
+        </label>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <%= f.label :woocommerce_consumer_key, 'Consumer Key', class: 'label' %>
+          <%= f.text_field :woocommerce_consumer_key, value: @woo_consumer_key, required: true, class: 'base-input' %>
+          <label class="label">
+            <span class="label-text-alt">From WooCommerce → Settings → Advanced → REST API</span>
+          </label>
+        </div>
+        <div class="form-control">
+          <%= f.label :woocommerce_consumer_secret, 'Consumer Secret', class: 'label' %>
+          <%= f.password_field :woocommerce_consumer_secret, class: 'base-input',
+                                required: @woo_consumer_secret.blank?,
+                                placeholder: @woo_consumer_secret.present? ? '••••••••••••' : '' %>
+          <label class="label">
+            <span class="label-text-alt">Only required when first saving or changing</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="alert alert-info text-sm" role="note">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 110 20A10 10 0 0112 2z"/>
+        </svg>
+        <span>Credentials are stored encrypted. Ensure your REST API keys have <strong>Read</strong> permissions enabled.</span>
+      </div>
+
+      <div class="form-control pt-2">
+        <%= f.button button_title(title: 'Save WooCommerce Settings', disabled_with: 'Saving…'), class: 'base-button' %>
+      </div>
+    <% end %>
+
+    <div class="divider">Test Connection</div>
+
+    <div class="card bg-base-100 shadow p-4">
+      <div class="flex gap-2 items-center">
+        <%= button_to 'Test Connection', test_connection_settings_woocommerce_path, method: :post, class: 'btn btn-secondary' do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Test Connection
+        <% end %>
+        <div id="woo_test_status" class="text-sm"></div>
+      </div>
+    </div>
+
+    <div class="divider">Plugin Requirements</div>
+
+    <div class="card bg-base-100 shadow p-4">
+      <h3 class="font-semibold mb-3">Required WordPress Plugins</h3>
+      <ul class="list-disc list-inside space-y-2 text-sm">
+        <li>
+          <strong>inkpos-api</strong> — Provides product data endpoint by SKU
+          <div class="text-base-content/60 text-xs mt-1">Endpoint: <code>/wp-json/inkpos/v1/product?sku={sku}</code></div>
+        </li>
+        <li>
+          <strong>variants-via-api</strong> — Provides variant data for variable products
+          <div class="text-base-content/60 text-xs mt-1">Endpoint: <code>/wp-json/wc/v3/variants/{product_id}</code></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div class="w-0 md:w-52"></div>
+</div>

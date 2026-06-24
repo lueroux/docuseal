@@ -183,6 +183,9 @@ Rails.application.routes.draw do
 
   # Phase 3 — Product catalog
   resources :products do
+    member do
+      post :sync
+    end
     resources :product_options, only: %i[index create destroy]
     resources :product_compatibility_rules, only: %i[index create destroy]
   end
@@ -227,6 +230,9 @@ Rails.application.routes.draw do
   scope '/settings', as: :settings do
     resources :ibcos, only: %i[index create], controller: 'ibcos_settings' do
       post :sync, on: :collection
+    end
+    resource :woocommerce, only: %i[show update], controller: 'woocommerce_settings' do
+      post :test_connection, on: :member
     end
     get 'server_info', to: 'server_info#index', as: :server_info
     unless Docuseal.multitenant?

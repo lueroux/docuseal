@@ -42,6 +42,17 @@ class ProductsController < ApplicationController
     redirect_to products_path, notice: 'Product was successfully deleted.'
   end
 
+  def sync
+    sync_service = WooCommerceProductSync.new(current_account)
+    result = sync_service.sync_product!(@product.sku)
+
+    if result[:success]
+      redirect_to @product, notice: 'Product synced from WooCommerce successfully.'
+    else
+      redirect_to @product, alert: "Sync failed: #{result[:error]}"
+    end
+  end
+
   private
 
   def set_product
@@ -59,8 +70,11 @@ class ProductsController < ApplicationController
       :cost_price,
       :markup_percentage,
       :available,
+      :woocommerce_product_id,
+      :image_url,
       spec_data: {},
-      ibcos_data: {}
+      ibcos_data: {},
+      manual_edit_flags: {}
     )
   end
 end
