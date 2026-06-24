@@ -13,6 +13,7 @@ class Product < ApplicationRecord
   validates :markup_percentage, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
   before_update :mark_changed_fields_as_manually_edited
+  before_destroy :check_no_quote_items
 
   scope :available, -> { where(available: true) }
   scope :by_brand, ->(brand) { where(brand:) }
@@ -56,6 +57,13 @@ class Product < ApplicationRecord
   end
 
   private
+
+  def check_no_quote_items
+    if quote_items.any?
+      errors.add(:base, "Cannot delete product that is used in quotes")
+      throw(:abort)
+    end
+  end
 
   def mark_changed_fields_as_manually_edited
     # Auto-mark non-price fields as manually edited when they change in the admin
