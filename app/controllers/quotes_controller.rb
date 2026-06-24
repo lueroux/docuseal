@@ -12,11 +12,17 @@ class QuotesController < ApplicationController
     respond_to do |format|
       format.html
       format.pdf do
-        pdf_generator = QuotePdfGenerator.new(@quote)
-        send_data pdf_generator.generate,
-                  filename: "quote-#{@quote.reference_number}.pdf",
-                  type: 'application/pdf',
-                  disposition: 'inline'
+        begin
+          pdf_generator = QuotePdfGenerator.new(@quote)
+          send_data pdf_generator.generate,
+                    filename: "quote-#{@quote.reference_number}.pdf",
+                    type: 'application/pdf',
+                    disposition: 'inline'
+        rescue => e
+          Rails.logger.error("PDF generation failed: #{e.message}")
+          Rails.logger.error(e.backtrace.join("\n"))
+          render plain: "PDF generation failed: #{e.message}", status: :internal_server_error
+        end
       end
     end
   end
