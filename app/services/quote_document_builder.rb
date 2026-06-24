@@ -44,7 +44,7 @@ class QuoteDocumentBuilder
       <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', Arial, sans-serif; font-size: 13px; color: #242424; background: #e5e5e5; padding: 32px 16px; }
-        .document { width: 794px; min-height: 1123px; background: #ffffff; margin: 0 auto; padding: 56px 64px 48px; box-shadow: 0 4px 24px rgba(0,0,0,0.12); position: relative; }
+        .document { width: 794px; min-height: 1123px; margin: 0 auto; padding: 56px 64px 48px; position: relative; }
         :root { --green: #94be57; --green-dark: #7aa844; --grey-light: #f4f4f4; --grey-mid: #c8c8c8; --text-dark: #242424; --text-muted: #666666; }
         .uppercase { text-transform: uppercase; }
         .text-right { text-align: right; }
@@ -94,7 +94,7 @@ class QuoteDocumentBuilder
         .terms-block { flex: 1; background: var(--grey-light); padding: 14px 18px; }
         .terms-block p { font-size: 12px; line-height: 1.6; color: var(--text-dark); margin-top: 8px; }
         .page-break { page-break-before: always; break-before: page; }
-        .product-detail-page { margin-top: 0; }
+        .product-detail-page { margin-top: 1em; }
         .product-detail-title { font-size: 20px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; color: var(--text-dark); margin-bottom: 20px; border-bottom: 2px solid var(--green); padding-bottom: 10px; }
         .product-detail-grid { display: flex; gap: 24px; margin-bottom: 20px; }
         .product-detail-image { flex: 0 0 300px; }
