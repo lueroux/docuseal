@@ -57,6 +57,7 @@ import FieldCondition from './elements/field_condition'
 import ConfirmUpload from './elements/confirm_upload'
 import IbcosLookup from './elements/ibcos_lookup'
 import FlashToast from './elements/flash_toast'
+import SpecEditor from './elements/spec_editor'
 
 import * as TurboInstantClick from './lib/turbo_instant_click'
 
@@ -155,6 +156,7 @@ safeRegisterElement('field-condition', FieldCondition)
 safeRegisterElement('confirm-upload', ConfirmUpload)
 safeRegisterElement('ibcos-lookup', IbcosLookup)
 safeRegisterElement('flash-toast', FlashToast)
+safeRegisterElement('spec-editor', SpecEditor)
 
 safeRegisterElement('template-builder', class extends HTMLElement {
   connectedCallback () {
