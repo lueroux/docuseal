@@ -13,7 +13,8 @@ class WoocommerceProductSync
     return nil unless configured?
 
     # inkpos API doesn't require authentication, use a separate client without auth
-    response = inkpos_client.get("/wp-json/inkpos/v1/product", params: { sku: })
+    # Pass SKU as query string parameter
+    response = inkpos_client.get("/wp-json/inkpos/v1/product?sku=#{CGI.escape(sku)}")
 
     logger.info("inkpos-api fetch for SKU #{sku}: status=#{response.status}, body=#{response.body.inspect}")
 
