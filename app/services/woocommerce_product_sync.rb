@@ -178,11 +178,12 @@ class WoocommerceProductSync
     standard_data = fetch_from_standard_wc(sku)
     logger.info("Standard WC API result: #{standard_data.inspect}")
 
-    # Merge data: prefer inkpos for spec_data, but use standard WC for image_url and product ID
+    # Merge data: prefer inkpos for spec_data, but use standard WC for image_url, product ID, and attributes
     if inkpos_data && standard_data
       woo_data = inkpos_data.merge(
         image_url: standard_data[:image_url],
-        woocommerce_product_id: standard_data[:woocommerce_product_id]
+        woocommerce_product_id: standard_data[:woocommerce_product_id],
+        woo_attributes: standard_data[:woo_attributes]
       )
       logger.info("Merged inkpos and standard WC data")
     elsif inkpos_data
