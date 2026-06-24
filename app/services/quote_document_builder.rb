@@ -333,9 +333,8 @@ class QuoteDocumentBuilder
     if product.woo_attributes.is_a?(Hash)
       product.woo_attributes.each do |key, value|
         next if value.blank?
-        visibility = product.attribute_visibility&.dig(key)
-        next if visibility && !visibility['visible_on_detail_page']
-        label = visibility&.dig('label') || key.humanize
+        next unless product.attribute_visible?(key)
+        label = product.attribute_label(key)
         display_value = value.is_a?(Array) ? value.join(', ') : value
         spec_rows << "<tr><td>#{label}</td><td>#{display_value}</td></tr>"
       end

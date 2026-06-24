@@ -40,6 +40,15 @@ class Product < ApplicationRecord
     "#{brand} #{name} (#{sku})".strip
   end
 
+  def attribute_visible?(key)
+    visibility = attribute_visibility&.dig(key)
+    visibility.nil? || visibility['visible_on_detail_page'] != false
+  end
+
+  def attribute_label(key)
+    attribute_visibility&.dig(key, 'label') || key.humanize
+  end
+
   def calculate_retail_price
     return retail_price if cost_price.blank? || markup_percentage.blank?
 

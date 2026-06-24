@@ -71,7 +71,7 @@ class ProductsController < ApplicationController
   end
 
   def product_params
-    params.require(:product).permit(
+    permitted = params.require(:product).permit(
       :sku,
       :name,
       :brand,
@@ -113,9 +113,17 @@ class ProductsController < ApplicationController
       :total_sales,
       spec_data: {},
       ibcos_data: {},
-      woo_attributes: {},
-      attribute_visibility: {},
       manual_edit_flags: {}
     )
+
+    if params[:product][:woo_attributes].present?
+      permitted[:woo_attributes] = params[:product][:woo_attributes].permit!
+    end
+
+    if params[:product][:attribute_visibility].present?
+      permitted[:attribute_visibility] = params[:product][:attribute_visibility].permit!
+    end
+
+    permitted
   end
 end

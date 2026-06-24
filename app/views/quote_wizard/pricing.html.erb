@@ -221,10 +221,9 @@
 
               <% quote_item.product.woo_attributes.each do |key, value| %>
                 <% next if value.blank? %>
-                <% visibility = quote_item.product.attribute_visibility.dig(key) %>
-                <% next if visibility && !visibility['visible_on_detail_page'] %>
+                <% next unless quote_item.product.attribute_visible?(key) %>
                 <div class="border-b border-base-200 pb-1">
-                  <span class="font-semibold"><%= visibility&.dig('label') || key.humanize %>:</span>
+                  <span class="font-semibold"><%= quote_item.product.attribute_label(key) %>:</span>
                   <span class="ml-2">
                     <%= value.is_a?(Array) ? value.join(', ') : value %>
                   </span>

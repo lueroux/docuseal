@@ -130,6 +130,103 @@
     <% end %>
   </div>
 
+  <!-- Key Specifications Editor -->
+  <div class="mt-6" data-controller="spec-editor">
+    <h3 class="font-semibold text-lg mb-3">Key Specifications</h3>
+    <p class="text-sm text-base-content/70 mb-4">Edit product attributes and control their visibility on the generated quote document.</p>
+
+    <div data-spec-editor-target="container" class="space-y-3">
+      <% @product.woo_attributes&.each do |key, value| %>
+        <% visibility = @product.attribute_visibility&.dig(key) || {} %>
+        <div data-spec-editor-target="row" class="flex items-center gap-3 p-3 border border-base-300 rounded-lg">
+          <div class="flex-1">
+            <label class="label label-text text-xs">Label</label>
+            <input type="text"
+                   name="product[attribute_visibility][<%= key %>][label]"
+                   value="<%= visibility['label'] || key.humanize %>"
+                   class="input input-bordered input-sm w-full"
+                   placeholder="Display label">
+          </div>
+          <div class="flex-1">
+            <label class="label label-text text-xs">Value</label>
+            <input type="text"
+                   name="product[woo_attributes][<%= key %>]"
+                   value="<%= value.is_a?(Array) ? value.join(', ') : value %>"
+                   class="input input-bordered input-sm w-full"
+                   placeholder="Attribute value">
+          </div>
+          <div class="flex flex-col items-center pt-6">
+            <label class="label label-text text-xs">Visible</label>
+            <input type="hidden" name="product[attribute_visibility][<%= key %>][visible_on_detail_page]" value="false">
+            <input type="checkbox"
+                   name="product[attribute_visibility][<%= key %>][visible_on_detail_page]"
+                   value="true"
+                   <%= visibility['visible_on_detail_page'] != false ? 'checked' : '' %>
+                   class="checkbox checkbox-sm checkbox-primary">
+          </div>
+          <div class="pt-6">
+            <button type="button"
+                    class="btn btn-xs btn-ghost btn-circle text-error"
+                    data-action="click->spec-editor#remove"
+                    aria-label="Remove attribute">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Template for new rows -->
+    <template data-spec-editor-target="template">
+      <div data-spec-editor-target="row" class="flex items-center gap-3 p-3 border border-base-300 rounded-lg">
+        <div class="flex-1">
+          <label class="label label-text text-xs">Label</label>
+          <input type="text"
+                 name="product[attribute_visibility][NEW_KEY][label]"
+                 value=""
+                 class="input input-bordered input-sm w-full"
+                 placeholder="Display label">
+        </div>
+        <div class="flex-1">
+          <label class="label label-text text-xs">Value</label>
+          <input type="text"
+                 name="product[woo_attributes][NEW_KEY]"
+                 value=""
+                 class="input input-bordered input-sm w-full"
+                 placeholder="Attribute value">
+        </div>
+        <div class="flex flex-col items-center pt-6">
+          <label class="label label-text text-xs">Visible</label>
+          <input type="hidden" name="product[attribute_visibility][NEW_KEY][visible_on_detail_page]" value="false">
+          <input type="checkbox"
+                 name="product[attribute_visibility][NEW_KEY][visible_on_detail_page]"
+                 value="true"
+                 checked
+                 class="checkbox checkbox-sm checkbox-primary">
+        </div>
+        <div class="pt-6">
+          <button type="button"
+                  class="btn btn-xs btn-ghost btn-circle text-error"
+                  data-action="click->spec-editor#remove"
+                  aria-label="Remove attribute">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <button type="button" class="btn btn-sm btn-outline mt-3" data-action="click->spec-editor#add">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Add Specification
+    </button>
+  </div>
+
   <% if @product.image_url.present? %>
     <div class="mt-4">
       <label class="label">Image Preview</label>

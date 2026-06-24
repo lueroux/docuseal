@@ -72,10 +72,9 @@
 
             <% @product.woo_attributes.each do |key, value| %>
               <% next if value.blank? %>
-              <% visibility = @product.attribute_visibility.dig(key) %>
-              <% next if visibility && !visibility['visible_on_detail_page'] %>
+              <% next unless @product.attribute_visible?(key) %>
               <div class="flex justify-between border-b border-base-200 pb-2">
-                <span class="font-semibold"><%= visibility&.dig('label') || key.humanize %>:</span>
+                <span class="font-semibold"><%= @product.attribute_label(key) %>:</span>
                 <span class="text-base-content/80">
                   <%= value.is_a?(Array) ? value.join(', ') : value %>
                 </span>
