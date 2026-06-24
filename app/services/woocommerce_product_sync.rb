@@ -118,11 +118,11 @@ class WoocommerceProductSync
 
     logger.info("Product record: woocommerce_product_id=#{product.woocommerce_product_id.inspect}, was_new_record=#{was_new_record}")
 
-    # If the product ID is not filled, find the product ID first via SKU using standard WC REST API
-    if product.woocommerce_product_id.blank?
-      woo_product_id = fetch_product_id_by_sku(sku)
-      logger.info("Fetched product ID by SKU: #{woo_product_id.inspect}")
-      product.woocommerce_product_id = woo_product_id if woo_product_id
+    # Always fetch the product ID by SKU to ensure correctness, even if already stored
+    woo_product_id = fetch_product_id_by_sku(sku)
+    logger.info("Fetched product ID by SKU: #{woo_product_id.inspect}")
+    if woo_product_id
+      product.woocommerce_product_id = woo_product_id
     end
 
     # Fetch product data from WooCommerce (prefer custom inkpos-api first for battery specs)
@@ -131,10 +131,9 @@ class WoocommerceProductSync
 
     # Fallback to standard WooCommerce REST API if inkpos-api does not return the product
     if woo_data.nil?
-      # Try fetching by product ID if we have it, otherwise fallback to SKU
-      lookup_key = product.woocommerce_product_id || sku
-      logger.info("Falling back to standard WC API with lookup key: #{lookup_key.inspect}")
-      woo_data = fetch_from_standard_wc(lookup_key)
+      # Always search by SKU to ensure we get the correct product
+      logger.info("Falling back to standard WC API with SKU: #{sku.inspect}")
+      woo_data = fetch_from_standard_wc(sku)
       logger.info("Standard WC API result: #{woo_data.inspect}")
     end
 
