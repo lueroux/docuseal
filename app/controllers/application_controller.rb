@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class ApplicationController < ActionController::Base
+  prepend_before_action :redirect_to_canonical_host
+
   BROWSER_LOCALE_REGEXP = /\A\w{2}(?:-\w{2})?/
 
   include ActiveStorage::SetCurrent
@@ -125,6 +127,17 @@ class ApplicationController < ActionController::Base
 
   def form_link_host
     Docuseal.default_url_options[:host]
+  end
+
+  def redirect_to_canonical_host
+    return unless Rails.env.production?
+
+    canonical_host = 'quotes.buxtons.net'
+    return if request.host == canonical_host
+    return if request.host == 'healthcheck.railway.app' || request.path == '/up'
+    return if request.host.include?('localhost') || request.host.include?('127.0.0.1')
+
+    redirect_to "https://#{canonical_host}#{request.fullpath}", allow_other_host: true, status: :moved_permanently
   end
 
   def maybe_redirect_com
