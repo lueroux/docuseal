@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class WooCommerceSettingsController < ApplicationController
+class WoocommerceSettingsController < ApplicationController
   authorize_resource class: false
   before_action :set_configs
 
@@ -15,7 +15,7 @@ class WooCommerceSettingsController < ApplicationController
   end
 
   def test_connection
-    sync_service = WooCommerceProductSync.new(current_account)
+    sync_service = WoocommerceProductSync.new(current_account)
 
     if sync_service.configured?
       # Try to fetch a product to test connection

@@ -43,7 +43,7 @@ class ProductsController < ApplicationController
   end
 
   def sync
-    sync_service = WooCommerceProductSync.new(current_account)
+    sync_service = WoocommerceProductSync.new(current_account)
     result = sync_service.sync_product!(@product.sku)
 
     if result[:success]
@@ -54,7 +54,7 @@ class ProductsController < ApplicationController
   end
 
   def sync_all
-    sync_service = WooCommerceProductSync.new(current_account)
+    sync_service = WoocommerceProductSync.new(current_account)
     results = sync_service.sync_all!
 
     if results[:failed].zero?

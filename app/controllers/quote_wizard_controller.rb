@@ -287,13 +287,13 @@ class QuoteWizardController < ApplicationController
   private
 
   def sync_products_with_woocommerce
-    return unless WooCommerceProductSync.new(@quote.account).configured?
+    return unless WoocommerceProductSync.new(@quote.account).configured?
 
     @quote.quote_items.includes(:product).find_each do |quote_item|
       product = quote_item.product
       next unless product
 
-      WooCommerceProductSync.new(@quote.account).sync_product!(product.sku)
+      WoocommerceProductSync.new(@quote.account).sync_product!(product.sku)
     end
   end
 

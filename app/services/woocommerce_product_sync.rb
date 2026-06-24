@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class WooCommerceProductSync
+class WoocommerceProductSync
   attr_reader :account, :logger
 
   def initialize(account)
