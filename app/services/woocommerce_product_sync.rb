@@ -216,6 +216,7 @@ class WoocommerceProductSync
       faraday.response :json
       faraday.adapter Faraday.default_adapter
       faraday.options.timeout = 30
+      faraday.headers['X-API-Key'] = 'inkpos_ae6ecab0aba2f2009c0ac66aa1204ed699dc2235'
     end
   end
 
