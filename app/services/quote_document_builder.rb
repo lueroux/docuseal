@@ -31,6 +31,7 @@ class QuoteDocumentBuilder
           #{build_disclaimer}
           #{build_signature_section}
         </div>
+        #{build_product_details}
       </body>
       </html>
     HTML
@@ -92,6 +93,24 @@ class QuoteDocumentBuilder
         .date-signed-line { margin-top: 20px; }
         .terms-block { flex: 1; background: var(--grey-light); padding: 14px 18px; }
         .terms-block p { font-size: 12px; line-height: 1.6; color: var(--text-dark); margin-top: 8px; }
+        .page-break { page-break-before: always; break-before: page; }
+        .product-detail-page { margin-top: 0; }
+        .product-detail-title { font-size: 20px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; color: var(--text-dark); margin-bottom: 20px; border-bottom: 2px solid var(--green); padding-bottom: 10px; }
+        .product-detail-grid { display: flex; gap: 24px; margin-bottom: 20px; }
+        .product-detail-image { flex: 0 0 300px; }
+        .product-detail-image img { width: 100%; max-height: 280px; object-fit: contain; border: 1px solid var(--grey-mid); border-radius: 4px; }
+        .product-detail-info { flex: 1; }
+        .product-detail-info .product-name { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text-dark); }
+        .product-detail-info .product-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.7; }
+        .product-detail-info .product-meta strong { color: var(--text-dark); font-weight: 600; }
+        .product-description { font-size: 12.5px; line-height: 1.7; color: var(--text-dark); margin-bottom: 20px; }
+        .product-description p { margin-bottom: 8px; }
+        .product-specs-title { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-dark); margin-bottom: 10px; border-bottom: 1px solid var(--grey-light); padding-bottom: 6px; }
+        .product-specs-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .product-specs-table td { padding: 6px 10px; line-height: 1.5; }
+        .product-specs-table tr:nth-child(odd) { background: var(--grey-light); }
+        .product-specs-table td:first-child { font-weight: 600; color: var(--text-muted); white-space: nowrap; padding-right: 16px; }
+        .product-specs-table td:last-child { color: var(--text-dark); }
         @media print {
           body { background: #ffffff; padding: 0; }
           .document { width: 100%; min-height: auto; box-shadow: none; padding: 20mm 18mm; margin: 0; }
@@ -267,6 +286,76 @@ class QuoteDocumentBuilder
           <div class="block-label">Terms &amp; Conditions</div>
           <p>Please confirm your acceptance of this quote by signing and returning a copy.</p>
         </div>
+      </div>
+    HTML
+  end
+
+  def build_product_details
+    return '' unless quote.quote_items.any?
+
+    pages_html = quote.quote_items.ordered.map do |item|
+      build_product_detail_page(item)
+    end.join("\n")
+
+    pages_html
+  end
+
+  def build_product_detail_page(item)
+    product = item.product
+    image_html = ''
+    if product.image_url.present?
+      image_html = "<div class=\"product-detail-image\"><img src=\"#{product.image_url}\" alt=\"#{product.name}\" /></div>"
+    end
+
+    meta_parts = []
+    meta_parts << "<strong>SKU:</strong> #{product.sku}" if product.sku.present?
+    meta_parts << "<strong>Brand:</strong> #{product.brand}" if product.brand.present?
+    meta_parts << "<strong>Category:</strong> #{product.category}" if product.category.present?
+    meta_parts << "<strong>Retail Price:</strong> &pound;#{number_with_precision(product.retail_price, precision: 2)}" if product.retail_price.present?
+    meta_html = meta_parts.join(' &nbsp;|&nbsp; ')
+
+    description_html = ''
+    if product.short_description.present? || product.description.present?
+      desc_parts = []
+      desc_parts << "<p>#{product.short_description}</p>" if product.short_description.present?
+      desc_parts << "<p>#{product.description}</p>" if product.description.present?
+      description_html = "<div class=\"product-description\">#{desc_parts.join}</div>"
+    end
+
+    specs_html = ''
+    spec_rows = []
+    if product.spec_data.is_a?(Hash)
+      product.spec_data.each do |key, value|
+        next if value.blank?
+        spec_rows << "<tr><td>#{key.humanize}</td><td>#{value}</td></tr>"
+      end
+    end
+    if product.woo_attributes.is_a?(Hash)
+      product.woo_attributes.each do |key, value|
+        next if value.blank?
+        visibility = product.attribute_visibility&.dig(key)
+        next if visibility && !visibility['visible_on_detail_page']
+        label = visibility&.dig('label') || key.humanize
+        display_value = value.is_a?(Array) ? value.join(', ') : value
+        spec_rows << "<tr><td>#{label}</td><td>#{display_value}</td></tr>"
+      end
+    end
+    if spec_rows.any?
+      specs_html = "<div class=\"product-specs-title\">Specifications</div><table class=\"product-specs-table\"><tbody>#{spec_rows.join}</tbody></table>"
+    end
+
+    <<~HTML
+      <div class="document page-break product-detail-page">
+        <h2 class="product-detail-title">Product Details</h2>
+        <div class="product-detail-grid">
+          #{image_html}
+          <div class="product-detail-info">
+            <div class="product-name">#{product.name}</div>
+            <div class="product-meta">#{meta_html}</div>
+          </div>
+        </div>
+        #{description_html}
+        #{specs_html}
       </div>
     HTML
   end

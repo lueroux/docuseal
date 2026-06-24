@@ -1,12 +1,11 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['modal'];
-
-  open() {
-    const modalId = this.element.dataset.productModalTargetModal;
+  open(event) {
+    event.preventDefault();
+    const modalId = this.element.dataset.modalId;
     const modal = document.getElementById(modalId);
-    if (modal) {
+    if (modal && typeof modal.showModal === 'function') {
       modal.showModal();
     }
   }

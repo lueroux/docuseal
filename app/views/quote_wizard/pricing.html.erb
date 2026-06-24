@@ -14,10 +14,11 @@
                 <div class="flex-1">
                   <div class="flex items-center gap-2">
                     <h4 class="font-semibold"><%= quote_item.product.name %></h4>
-                    <button type="button" 
+                    <button type="button"
                             class="btn btn-xs btn-ghost btn-circle"
+                            data-controller="product-modal"
                             data-action="click->product-modal#open"
-                            data-product-modal-target-modal="product-detail-modal-<%= quote_item.id %>">
+                            data-modal-id="product-detail-modal-<%= quote_item.id %>">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4">
                         <path fill-rule="evenodd" d="M8 2.5A5.5 5.5 0 1 0 13.5 8 5.5 5.5 0 0 0 8 2.5ZM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0ZM8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />
                         <path d="M6.75 8a.75.75 0 0 1 .75-.75h2.25a.75.75 0 0 1 0 1.5H7.5A.75.75 0 0 1 6.75 8Z" />
