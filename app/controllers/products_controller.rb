@@ -116,12 +116,13 @@ class ProductsController < ApplicationController
       manual_edit_flags: {}
     )
 
+    # Manually extract nested JSONB hashes
     if params[:product][:woo_attributes].present?
-      permitted[:woo_attributes] = params[:product][:woo_attributes].permit!
+      permitted[:woo_attributes] = params[:product][:woo_attributes].to_unsafe_h
     end
 
     if params[:product][:attribute_visibility].present?
-      permitted[:attribute_visibility] = params[:product][:attribute_visibility].permit!
+      permitted[:attribute_visibility] = params[:product][:attribute_visibility].to_unsafe_h
     end
 
     permitted
