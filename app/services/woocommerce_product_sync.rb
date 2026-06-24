@@ -12,7 +12,10 @@ class WoocommerceProductSync
   def fetch_by_sku(sku)
     return nil unless configured?
 
-    response = http_client.get("/wp-json/inkpos/v1/product", params: { sku: })
+    # inkpos API doesn't require authentication, use a separate client without auth
+    response = inkpos_client.get("/wp-json/inkpos/v1/product", params: { sku: })
+
+    logger.info("inkpos-api fetch for SKU #{sku}: status=#{response.status}, body=#{response.body.inspect}")
 
     return nil unless response.success?
 
@@ -200,6 +203,15 @@ class WoocommerceProductSync
   def http_client
     @http_client ||= Faraday.new(url: woo_url) do |faraday|
       faraday.request :authorization, :basic, woo_consumer_key, woo_consumer_secret
+      faraday.request :url_encoded
+      faraday.response :json
+      faraday.adapter Faraday.default_adapter
+      faraday.options.timeout = 30
+    end
+  end
+
+  def inkpos_client
+    @inkpos_client ||= Faraday.new(url: woo_url) do |faraday|
       faraday.request :url_encoded
       faraday.response :json
       faraday.adapter Faraday.default_adapter
