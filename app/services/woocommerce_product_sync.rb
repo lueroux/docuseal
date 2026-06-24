@@ -53,20 +53,72 @@ class WoocommerceProductSync
     nil
   end
 
+  # Fetch product details from standard WooCommerce REST API by ID or SKU
+  def fetch_from_standard_wc(sku_or_id)
+    return nil unless configured?
+
+    response = if sku_or_id.to_s.match?(/\A\d+\z/)
+                 http_client.get("/wp-json/wc/v3/products/#{sku_or_id}")
+               else
+                 http_client.get("/wp-json/wc/v3/products", params: { sku: sku_or_id })
+               end
+
+    return nil unless response.success?
+
+    data = response.parsed_response
+    product_data = data.is_a?(Array) ? data.first : data
+    return nil unless product_data
+
+    parse_standard_wc_response(product_data)
+  rescue StandardError => e
+    logger.error("WooCommerce standard API fetch error for #{sku_or_id}: #{e.message}")
+    nil
+  end
+
+  def parse_standard_wc_response(data)
+    {
+      sku: data['sku'],
+      name: data['name'] || data['sku'],
+      brand: nil,
+      category: data['categories']&.first&.[]('name'),
+      description: data['description'],
+      retail_price: parse_price(data['regular_price'] || data['price']),
+      cost_price: nil,
+      image_url: data['images']&.first&.[]('src'),
+      woocommerce_product_id: data['id'],
+      spec_data: {}
+    }
+  end
+
   # Sync a single product from WooCommerce data
   def sync_product!(sku)
-    woo_data = fetch_by_sku(sku)
-    return { success: false, error: 'Product not found in WooCommerce' } unless woo_data
-
     product = Product.find_or_initialize_by(account:, sku:)
     was_new_record = product.new_record?
+
+    # If the product ID is not filled, find the product ID first via SKU using standard WC REST API
+    if product.woocommerce_product_id.blank?
+      woo_product_id = fetch_product_id_by_sku(sku)
+      product.woocommerce_product_id = woo_product_id if woo_product_id
+    end
+
+    # Fetch product data from WooCommerce (prefer custom inkpos-api first for battery specs)
+    woo_data = fetch_by_sku(sku)
+
+    # Fallback to standard WooCommerce REST API if inkpos-api does not return the product
+    if woo_data.nil?
+      # Try fetching by product ID if we have it, otherwise fallback to SKU
+      woo_data = fetch_from_standard_wc(product.woocommerce_product_id || sku)
+    end
+
+    return { success: false, error: 'Product not found in WooCommerce' } unless woo_data
 
     # Update fields that aren't manually edited
     update_product_from_woo_data(product, woo_data)
 
-    # Automatically fetch WooCommerce product ID by SKU
-    woo_product_id = fetch_product_id_by_sku(sku)
-    product.woocommerce_product_id = woo_product_id if woo_product_id
+    # Make sure we store the product ID if we got it from the synced data
+    if product.woocommerce_product_id.blank? && woo_data[:woocommerce_product_id].present?
+      product.woocommerce_product_id = woo_data[:woocommerce_product_id]
+    end
 
     product.synced_at = Time.current
 
