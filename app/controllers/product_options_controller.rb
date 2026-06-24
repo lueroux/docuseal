@@ -43,7 +43,8 @@ class ProductOptionsController < ApplicationController
       :is_required,
       :option_group,
       :option_type,
-      :sort_order
+      :sort_order,
+      :linked_product_id
     )
   end
 end

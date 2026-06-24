@@ -20,6 +20,7 @@
             <tr>
               <th>SKU</th>
               <th>Name</th>
+              <th>Linked Product</th>
               <th>Group</th>
               <th>Type</th>
               <th>Price</th>
@@ -33,6 +34,13 @@
               <tr>
                 <td><%= option.sku %></td>
                 <td><%= option.name %></td>
+                <td>
+                  <% if option.linked_product %>
+                    <%= link_to option.linked_product.display_name, product_path(option.linked_product), class: "link link-primary" %>
+                  <% else %>
+                    <span class="text-base-content/50">-</span>
+                  <% end %>
+                </td>
                 <td><%= option.option_group || '-' %></td>
                 <td><%= option.option_type %></td>
                 <td><%= number_to_currency(option.price) %></td>
@@ -60,7 +68,58 @@
     <div class="divider"></div>
 
     <h3 class="font-bold text-lg">Add New Option</h3>
-    <%= form_with model: [@product, @product.product_options.build], local: true do |f| %>
+
+    <!-- Link existing product as option -->
+    <div class="collapse collapse-arrow bg-base-200 mt-4 mb-2">
+      <input type="checkbox" />
+      <div class="collapse-title font-medium">Link an existing product as an option</div>
+      <div class="collapse-content">
+        <p class="text-sm text-base-content/70 mb-3">Select a product from your catalog to add as an option/add-on for this product. Fields will auto-populate from the linked product but can be overridden.</p>
+        <%= form_with model: [@product, @product.product_options.build], local: true do |f| %>
+          <%= f.hidden_field :option_type, value: 'addon' %>
+          <%= f.hidden_field :sort_order, value: @product_options.count %>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text">Select Product</span></label>
+              <%= f.select :linked_product_id,
+                    options_for_select(
+                      current_account.products.available
+                        .where.not(id: @product.id)
+                        .order(:brand, :name)
+                        .map { |p| ["#{p.brand} #{p.name} (#{p.sku}) — #{number_to_currency(p.retail_price)}", p.id] }
+                    ),
+                    { include_blank: 'Choose a product...' },
+                    class: "select select-bordered", required: true %>
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">Option Group (optional)</span></label>
+              <%= f.text_field :option_group, class: "input input-bordered", placeholder: "e.g., Accessories, Tyres" %>
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">Price Override (optional)</span></label>
+              <%= f.number_field :price, class: "input input-bordered", step: "0.01", placeholder: "Uses product price if blank" %>
+            </div>
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text">Required Option</span>
+                <%= f.check_box :is_required, class: "checkbox" %>
+              </label>
+            </div>
+          </div>
+          <div class="mt-4">
+            <%= f.submit "Link Product as Option", class: "btn btn-primary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Manual option entry -->
+    <div class="collapse collapse-arrow bg-base-200 mt-2">
+      <input type="checkbox" />
+      <div class="collapse-title font-medium">Add a custom option manually</div>
+      <div class="collapse-content">
+        <%= form_with model: [@product, @product.product_options.build], local: true do |f| %>
+      <%= f.hidden_field :linked_product_id, value: '' %>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <div class="form-control">
           <label class="label"><span class="label-text">SKU</span></label>
@@ -109,5 +168,7 @@
         <%= f.submit "Add Option", class: "btn btn-primary" %>
       </div>
     <% end %>
+      </div>
+    </div>
   </div>
 </div>
