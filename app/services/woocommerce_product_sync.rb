@@ -98,11 +98,11 @@ class WoocommerceProductSync
     results
   end
 
-  private
-
   def configured?
     woo_url.present? && woo_consumer_key.present? && woo_consumer_secret.present?
   end
+
+  private
 
   def woo_url
     @woo_url ||= EncryptedConfig.find_by(account:, key: 'woocommerce_url')&.value
