@@ -36,6 +36,23 @@ class WoocommerceProductSync
     []
   end
 
+  # Fetch WooCommerce product ID by SKU using WooCommerce REST API
+  def fetch_product_id_by_sku(sku)
+    return nil unless configured?
+
+    response = http_client.get("/wp-json/wc/v3/products", params: { sku: })
+
+    return nil unless response.success?
+
+    products = response.parsed_response
+    return nil unless products.is_a?(Array) && products.any?
+
+    products.first['id']
+  rescue StandardError => e
+    logger.error("WooCommerce product ID fetch error for SKU #{sku}: #{e.message}")
+    nil
+  end
+
   # Sync a single product from WooCommerce data
   def sync_product!(sku)
     woo_data = fetch_by_sku(sku)
@@ -47,8 +64,11 @@ class WoocommerceProductSync
     # Update fields that aren't manually edited
     update_product_from_woo_data(product, woo_data)
 
+    # Automatically fetch WooCommerce product ID by SKU
+    woo_product_id = fetch_product_id_by_sku(sku)
+    product.woocommerce_product_id = woo_product_id if woo_product_id
+
     product.synced_at = Time.current
-    product.woocommerce_product_id = woo_data[:woocommerce_product_id] if woo_data[:woocommerce_product_id]
 
     if product.save
       { success: true, product:, was_new_record: }
