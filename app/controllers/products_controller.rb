@@ -58,6 +58,10 @@ class ProductsController < ApplicationController
     else
       redirect_to @product, alert: "Sync failed: #{result[:error]}", allow_other_host: true
     end
+  rescue => e
+    Rails.logger.error("Product sync failed: #{e.class} - #{e.message}")
+    Rails.logger.error(e.backtrace.first(10).join("\n"))
+    redirect_to @product, alert: "Sync failed: #{e.message}", allow_other_host: true
   end
 
   def sync_all
