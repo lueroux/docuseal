@@ -16,7 +16,7 @@ class WoocommerceProductSync
 
     return nil unless response.success?
 
-    parse_inkpos_response(response.parsed_response)
+    parse_inkpos_response(response.body)
   rescue StandardError => e
     logger.error("WooCommerce sync error for SKU #{sku}: #{e.message}")
     nil
@@ -30,7 +30,7 @@ class WoocommerceProductSync
 
     return [] unless response.success?
 
-    parse_variants_response(response.parsed_response)
+    parse_variants_response(response.body)
   rescue StandardError => e
     logger.error("WooCommerce variants sync error for product #{product_id}: #{e.message}")
     []
@@ -44,7 +44,7 @@ class WoocommerceProductSync
 
     return nil unless response.success?
 
-    products = response.parsed_response
+    products = response.body
     return nil unless products.is_a?(Array) && products.any?
 
     products.first['id']
@@ -65,7 +65,7 @@ class WoocommerceProductSync
 
     return nil unless response.success?
 
-    data = response.parsed_response
+    data = response.body
     product_data = data.is_a?(Array) ? data.first : data
     return nil unless product_data
 
@@ -172,6 +172,7 @@ class WoocommerceProductSync
     @http_client ||= Faraday.new(url: woo_url) do |faraday|
       faraday.request :authorization, :basic, woo_consumer_key, woo_consumer_secret
       faraday.request :url_encoded
+      faraday.response :json
       faraday.adapter Faraday.default_adapter
       faraday.options.timeout = 30
     end
