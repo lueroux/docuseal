@@ -42,11 +42,14 @@ class WoocommerceProductSync
 
     response = http_client.get("/wp-json/wc/v3/products", params: { sku: })
 
+    logger.info("WooCommerce product ID lookup for SKU #{sku}: status=#{response.status}, body=#{response.body.inspect}")
+
     return nil unless response.success?
 
     products = response.body
     return nil unless products.is_a?(Array) && products.any?
 
+    logger.info("WooCommerce product ID found for SKU #{sku}: #{products.first['id']}")
     products.first['id']
   rescue StandardError => e
     logger.error("WooCommerce product ID fetch error for SKU #{sku}: #{e.message}")
@@ -62,6 +65,8 @@ class WoocommerceProductSync
                else
                  http_client.get("/wp-json/wc/v3/products", params: { sku: sku_or_id })
                end
+
+    logger.info("Standard WC API fetch for #{sku_or_id}: status=#{response.status}, body=#{response.body.inspect}")
 
     return nil unless response.success?
 
@@ -92,22 +97,30 @@ class WoocommerceProductSync
 
   # Sync a single product from WooCommerce data
   def sync_product!(sku)
+    logger.info("Starting sync for SKU: #{sku}")
     product = Product.find_or_initialize_by(account:, sku:)
     was_new_record = product.new_record?
+
+    logger.info("Product record: woocommerce_product_id=#{product.woocommerce_product_id.inspect}, was_new_record=#{was_new_record}")
 
     # If the product ID is not filled, find the product ID first via SKU using standard WC REST API
     if product.woocommerce_product_id.blank?
       woo_product_id = fetch_product_id_by_sku(sku)
+      logger.info("Fetched product ID by SKU: #{woo_product_id.inspect}")
       product.woocommerce_product_id = woo_product_id if woo_product_id
     end
 
     # Fetch product data from WooCommerce (prefer custom inkpos-api first for battery specs)
     woo_data = fetch_by_sku(sku)
+    logger.info("inkpos-api result: #{woo_data.inspect}")
 
     # Fallback to standard WooCommerce REST API if inkpos-api does not return the product
     if woo_data.nil?
       # Try fetching by product ID if we have it, otherwise fallback to SKU
-      woo_data = fetch_from_standard_wc(product.woocommerce_product_id || sku)
+      lookup_key = product.woocommerce_product_id || sku
+      logger.info("Falling back to standard WC API with lookup key: #{lookup_key.inspect}")
+      woo_data = fetch_from_standard_wc(lookup_key)
+      logger.info("Standard WC API result: #{woo_data.inspect}")
     end
 
     return { success: false, error: 'Product not found in WooCommerce' } unless woo_data
@@ -123,8 +136,10 @@ class WoocommerceProductSync
     product.synced_at = Time.current
 
     if product.save
+      logger.info("Product sync successful for SKU #{sku}")
       { success: true, product:, was_new_record: }
     else
+      logger.error("Product sync failed for SKU #{sku}: #{product.errors.full_messages.to_sentence}")
       { success: false, error: product.errors.full_messages.to_sentence }
     end
   end
