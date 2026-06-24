@@ -19,7 +19,14 @@ worker_timeout 3600 if ENV.fetch('RAILS_ENV', 'development') == 'development'
 
 # Specifies the `port` that Puma will listen on to receive requests; default is 3000.
 #
-port ENV.fetch('PORT', 3000)
+port_to_listen = ENV.fetch('PORT', 3000).to_i
+port port_to_listen
+
+# Bind to both 3000 and 8080 in production to handle domain mapping differences on Railway
+if ENV.fetch('RAILS_ENV', 'development') == 'production'
+  bind "tcp://0.0.0.0:3000" if port_to_listen != 3000
+  bind "tcp://0.0.0.0:8080" if port_to_listen != 8080
+end
 
 # Specifies the `environment` that Puma will run in.
 #
