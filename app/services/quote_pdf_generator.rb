@@ -10,8 +10,9 @@ class QuotePdfGenerator
   end
 
   def generate
-    document_builder = QuoteDocumentBuilder.new(quote)
-    html_content = document_builder.build_html
+    Rails.logger.info("QuotePdfGenerator#generate called for quote #{quote.id}")
+    Rails.logger.info("Quote reference: #{quote.reference_number}")
+    Rails.logger.info("Quote customer: #{quote.customer&.name}")
     
     # Create PDF using HexaPDF
     pdf = HexaPDF::Document.new
@@ -29,13 +30,17 @@ class QuotePdfGenerator
     
     # Add customer details
     y_position = 680
-    canvas.text("Customer: #{quote.customer.name}", at: [50, y_position])
-    y_position -= 20
-    canvas.text("Email: #{quote.customer.email}", at: [50, y_position])
-    
-    if quote.customer.phone.present?
+    if quote.customer
+      canvas.text("Customer: #{quote.customer.name}", at: [50, y_position])
       y_position -= 20
-      canvas.text("Phone: #{quote.customer.phone}", at: [50, y_position])
+      canvas.text("Email: #{quote.customer.email}", at: [50, y_position])
+      
+      if quote.customer.phone.present?
+        y_position -= 20
+        canvas.text("Phone: #{quote.customer.phone}", at: [50, y_position])
+      end
+    else
+      canvas.text("Customer: Not specified", at: [50, y_position])
     end
     
     # Add quote items
