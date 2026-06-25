@@ -101,6 +101,7 @@ class QuoteWizardController < ApplicationController
       if @attachment.save
         format.turbo_stream do
           render turbo_stream: [
+            turbo_stream.remove('no_attachments_notice'),
             turbo_stream.append('quote_attachments_list',
                                 partial: 'quote_wizard/attachment_card',
                                 locals: { attachment: @attachment, quote: @quote }),
@@ -128,7 +129,14 @@ class QuoteWizardController < ApplicationController
     attachment.destroy
 
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: turbo_stream.remove("attachment_#{attachment.id}") }
+      format.turbo_stream do
+        streams = [turbo_stream.remove("attachment_#{attachment.id}")]
+        if @quote.quote_attachments.count.zero?
+          streams << turbo_stream.append('quote_attachments_list',
+            '<div id="no_attachments_notice" class="text-sm text-base-content/50 italic">No attachments yet. Use the form below to upload files.</div>'.html_safe)
+        end
+        render turbo_stream: streams
+      end
       format.html { redirect_back fallback_location: quote_wizard_path(@quote, step: 'attachments'), notice: 'Attachment removed.' }
     end
   end
