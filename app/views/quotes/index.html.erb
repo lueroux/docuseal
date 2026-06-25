@@ -74,7 +74,7 @@
     </div>
 
     <div class="mt-4">
-      <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
+      <%= render 'shared/pagination', pagy: @pagy, items_name: 'quotes' if @pagy.pages > 1 %>
     </div>
   <% else %>
     <div class="text-center py-12">
