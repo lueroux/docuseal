@@ -53,7 +53,16 @@ ENV OPENSSL_CONF=/etc/openssl_legacy.cnf
 WORKDIR /app
 
 RUN apk add --no-cache libpq vips redis onnxruntime leptonica ttf-freefont fontconfig && \
-    rm -f /usr/bin/onnx_test_runner /usr/bin/onnxruntime_test
+    rm -f /usr/bin/onnx_test_runner /usr/bin/onnxruntime_test && \
+    wget -q "https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.alpine3.18_$(uname -m).apk" -O /tmp/wkhtmltox.apk && \
+    mkdir -p /tmp/wk && cd /tmp/wk && tar xzf /tmp/wkhtmltox.apk 2>/dev/null || ( \
+      cd /tmp/wk && apk info -q --contents /tmp/wkhtmltox.apk 2>/dev/null; \
+      tar xzf /tmp/wkhtmltox.apk --warning=no-unknown-keyword 2>/dev/null || true; \
+    ) && \
+    find /tmp/wk -name wkhtmltopdf -type f -exec cp {} /usr/local/bin/ \; && \
+    chmod +x /usr/local/bin/wkhtmltopdf && \
+    rm -rf /tmp/wk /tmp/wkhtmltox.apk && \
+    echo "wkhtmltopdf installed at $(which wkhtmltopdf)"
 
 RUN addgroup -g 2000 docuseal && adduser -u 2000 -G docuseal -s /bin/sh -D -h /home/docuseal docuseal
 
