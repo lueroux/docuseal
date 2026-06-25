@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'hexapdf'
+require 'tempfile'
 
 class QuotePdfGenerator
   attr_reader :quote
@@ -111,7 +112,7 @@ class QuotePdfGenerator
       end
     end
 
-    # Add attachments
+    # Add attachments — list them in the body
     attachments = quote.quote_attachments.ordered
     if attachments.any?
       y_position -= 30
@@ -128,6 +129,11 @@ class QuotePdfGenerator
         end
       end
     end
+
+    # Append each attachment as its own page(s)
+    attachments.each do |att|
+      append_attachment_page(pdf, att)
+    end
     
     # Output PDF
     io = StringIO.new
@@ -136,6 +142,147 @@ class QuotePdfGenerator
   end
 
   private
+
+  def append_attachment_page(pdf, att)
+    return unless att.file.attached?
+
+    content_type = att.file.content_type.to_s.downcase
+    filename = att.file.filename.to_s
+
+    if content_type == 'application/pdf'
+      append_pdf_attachment(pdf, att)
+    elsif content_type.start_with?('image/')
+      append_image_attachment(pdf, att)
+    else
+      append_other_attachment(pdf, att)
+    end
+  rescue => e
+    Rails.logger.error("Failed to append attachment #{att.id} (#{att.file.filename}): #{e.message}")
+    append_fallback_page(pdf, att, e.message)
+  end
+
+  def append_pdf_attachment(pdf, att)
+    tempfile = nil
+    begin
+      tempfile = Tempfile.new(['attach', '.pdf'], binmode: true)
+      att.file.download { |chunk| tempfile.write(chunk) }
+      tempfile.rewind
+
+      other = HexaPDF::Document.open(tempfile.path)
+      other.pages.each do |page|
+        imported = pdf.import(page)
+        # Add a small label at the top
+        canvas = imported.canvas(type: :overlay)
+        canvas.font('Helvetica', size: 8)
+        canvas.fill_color(128, 128, 128)
+        label = "#{att.name} — #{att.file.filename}"
+        canvas.text(label, at: [20, imported.box.height - 15])
+        pdf.pages << imported
+      end
+    ensure
+      tempfile&.close
+      tempfile&.unlink
+    end
+  end
+
+  def append_image_attachment(pdf, att)
+    tempfile = nil
+    begin
+      ext = File.extname(att.file.filename.to_s)
+      tempfile = Tempfile.new(['attach', ext], binmode: true)
+      att.file.download { |chunk| tempfile.write(chunk) }
+      tempfile.rewind
+
+      page = pdf.pages.add
+      canvas = page.canvas
+
+      # Add label at top
+      canvas.font('Helvetica', size: 9)
+      canvas.fill_color(128, 128, 128)
+      label = "Attachment: #{att.name} — #{att.file.filename}"
+      canvas.text(label, at: [20, page.box.height - 20])
+
+      # Load and draw image
+      begin
+        image = pdf.images.add(tempfile.path)
+        iw = image.info.width.to_f
+        ih = image.info.height.to_f
+
+        if iw <= 0 || ih <= 0
+          raise "Invalid image dimensions"
+        end
+
+        # Available area (leave margins)
+        margin = 30
+        avail_w = page.box.width - (2 * margin)
+        avail_h = page.box.height - 50  # account for label
+
+        # Scale to fit
+        scale = [avail_w / iw, avail_h / ih].min
+        w = iw * scale
+        h = ih * scale
+
+        # Center
+        x = (page.box.width - w) / 2.0
+        y = margin + (avail_h - h) / 2.0
+
+        canvas.image(image, at: [x, y + h], width: w, height: h)
+      rescue => e
+        Rails.logger.warn("Image embed failed for #{att.file.filename}: #{e.message}")
+        canvas.font('Helvetica', size: 12)
+        canvas.fill_color(100, 100, 100)
+        canvas.text("[ Image could not be rendered: #{att.file.filename} ]", at: [60, page.box.height / 2])
+      end
+    ensure
+      tempfile&.close
+      tempfile&.unlink
+    end
+  end
+
+  def append_other_attachment(pdf, att)
+    page = pdf.pages.add
+    canvas = page.canvas
+
+    canvas.font('Helvetica', size: 14)
+    canvas.fill_color(80, 80, 80)
+    cx = page.box.width / 2
+
+    canvas.text("Attached File", at: [cx - 60, page.box.height - 60])
+    
+    canvas.font('Helvetica', size: 18)
+    canvas.fill_color(40, 40, 40)
+    canvas.text(att.name, at: [cx - 80, page.box.height - 120])
+    
+    canvas.font('Helvetica', size: 12)
+    canvas.fill_color(100, 100, 100)
+    canvas.text("Filename: #{att.file.filename}", at: [cx - 100, page.box.height - 160])
+    canvas.text("Type: #{att.file.content_type}", at: [cx - 100, page.box.height - 182])
+    canvas.text("Size: #{number_to_human_size(att.file.byte_size)}", at: [cx - 100, page.box.height - 204])
+
+    if att.description.present?
+      canvas.text("Description: #{att.description}", at: [cx - 100, page.box.height - 232])
+    end
+
+    canvas.font('Helvetica', size: 11)
+    canvas.fill_color(140, 140, 140)
+    canvas.text("(This file type cannot be displayed inline in the PDF)", at: [cx - 130, page.box.height - 280])
+    canvas.text("Please refer to the original file.", at: [cx - 130, page.box.height - 300])
+  end
+
+  def append_fallback_page(pdf, att, error_msg)
+    page = pdf.pages.add
+    canvas = page.canvas
+
+    canvas.font('Helvetica', size: 14)
+    canvas.fill_color(180, 60, 60)
+    canvas.text("Error Including Attachment", at: [50, page.box.height - 60])
+
+    canvas.font('Helvetica', size: 12)
+    canvas.fill_color(100, 100, 100)
+    canvas.text("Could not include: #{att.file.filename}", at: [50, page.box.height - 100])
+    canvas.text(att.name, at: [50, page.box.height - 122])
+    canvas.text("Error: #{error_msg}", at: [50, page.box.height - 150])
+  end
 
   def number_to_human_size(bytes)
     return '0 Bytes' if bytes.nil? || bytes.zero?
