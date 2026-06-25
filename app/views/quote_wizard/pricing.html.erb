@@ -276,4 +276,94 @@
       </form>
     </dialog>
   <% end %>
+
+  <script nonce="<%= content_security_policy_nonce %>" data-turbo-track="reload">
+    (function() {
+      // Real-time line total updates for each quote item pricing row
+      document.querySelectorAll('[data-controller="price-calculator"]').forEach(function(container) {
+        const quotedPriceInput = container.querySelector('[data-price-calculator-target="quotedPrice"]');
+        const discountPctInput = container.querySelector('[data-price-calculator-target="discountPercentage"]');
+        const discountAmtInput = container.querySelector('[data-price-calculator-target="discountAmount"]');
+        const lineTotalEl = container.querySelector('[data-price-calculator-target="lineTotal"]');
+        const retailEl = container.querySelector('[data-price-calculator-target="retailPrice"]');
+        
+        if (!quotedPriceInput || !lineTotalEl) return;
+        
+        const retailPrice = parseFloat(container.dataset.priceCalculatorRetailValue) || 0;
+        const optionsTotal = parseFloat(container.dataset.priceCalculatorOptionsTotalValue) || 0;
+        const quantity = parseFloat(container.dataset.priceCalculatorQuantityValue) || 1;
+        
+        let updateTimeout;
+        
+        function updateLineTotal() {
+          const qp = parseFloat(quotedPriceInput.value) || 0;
+          const total = (qp + optionsTotal) * quantity;
+          lineTotalEl.textContent = '£' + total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        
+        function submitForm() {
+          clearTimeout(updateTimeout);
+          updateTimeout = setTimeout(function() {
+            const form = quotedPriceInput.closest('form');
+            if (form && form.requestSubmit) form.requestSubmit();
+          }, 500);
+        }
+        
+        // Sync discount % / amount with quoted price
+        function syncFromQuotedPrice() {
+          const qp = parseFloat(quotedPriceInput.value) || 0;
+          if (retailPrice > 0) {
+            const amt = retailPrice - qp;
+            const pct = (amt / retailPrice) * 100;
+            if (discountAmtInput) discountAmtInput.value = Math.max(0, amt).toFixed(2);
+            if (discountPctInput) discountPctInput.value = Math.max(0, pct).toFixed(2);
+          }
+          updateLineTotal();
+        }
+        
+        function syncFromDiscountPct() {
+          const pct = parseFloat(discountPctInput.value) || 0;
+          if (retailPrice > 0) {
+            const amt = (retailPrice * pct) / 100;
+            const qp = retailPrice - amt;
+            quotedPriceInput.value = Math.max(0, qp).toFixed(2);
+            if (discountAmtInput) discountAmtInput.value = Math.max(0, amt).toFixed(2);
+          }
+          updateLineTotal();
+        }
+        
+        function syncFromDiscountAmt() {
+          const amt = parseFloat(discountAmtInput.value) || 0;
+          const qp = Math.max(0, retailPrice - amt);
+          quotedPriceInput.value = qp.toFixed(2);
+          if (retailPrice > 0 && discountPctInput) {
+            discountPctInput.value = ((amt / retailPrice) * 100).toFixed(2);
+          }
+          updateLineTotal();
+        }
+        
+        quotedPriceInput.addEventListener('input', function() {
+          syncFromQuotedPrice();
+          submitForm();
+        });
+        
+        if (discountPctInput) {
+          discountPctInput.addEventListener('input', function() {
+            syncFromDiscountPct();
+            submitForm();
+          });
+        }
+        
+        if (discountAmtInput) {
+          discountAmtInput.addEventListener('input', function() {
+            syncFromDiscountAmt();
+            submitForm();
+          });
+        }
+        
+        // Initial update
+        updateLineTotal();
+      });
+    })();
+  </script>
 <% end %>
