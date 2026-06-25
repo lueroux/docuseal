@@ -315,6 +315,7 @@ class QuoteWizardController < ApplicationController
       )
       
       unless @quote.persisted?
+        @quote.send(:generate_reference_number) if @quote.reference_number.blank?
         @quote.save(validate: false)
         session[:draft_quote_id] = @quote.id
       end

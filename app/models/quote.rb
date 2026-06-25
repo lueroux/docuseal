@@ -3,7 +3,7 @@
 class Quote < ApplicationRecord
   belongs_to :account
   belongs_to :user
-  belongs_to :customer
+  belongs_to :customer, optional: true
   has_many :quote_items, dependent: :destroy
   has_many :quote_sections, dependent: :destroy
   has_many :quote_payment_structures, dependent: :destroy
