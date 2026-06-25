@@ -115,9 +115,10 @@
               <% if selected_opts.any? %>
                 <div class="mt-4 pt-3 border-t border-base-200">
                   <div class="text-sm font-semibold mb-3">Selected Options</div>
+                  <div class="flex flex-wrap gap-3">
                   <% selected_opts.each do |qio| %>
                     <% linked = qio.product_option.linked_product %>
-                    <div class="bg-base-200 rounded-lg p-3 mb-3 last:mb-0">
+                    <div class="bg-base-200 rounded-lg p-3 flex-1 min-w-[400px]">
                       <div class="flex items-center gap-2 mb-3">
                         <div class="flex-1 min-w-0">
                           <div class="text-sm font-semibold truncate"><%= qio.product_option.name %></div>
@@ -191,6 +192,7 @@
                       <% end %>
                     </div>
                   <% end %>
+                  </div>
                 </div>
               <% end %>
             <% end %>
