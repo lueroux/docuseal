@@ -114,35 +114,83 @@
               <% selected_opts = quote_item.quote_item_options.includes(:product_option).where(is_selected: true) %>
               <% if selected_opts.any? %>
                 <div class="mt-4 pt-3 border-t border-base-200">
-                  <div class="text-sm font-semibold mb-2">Selected Options</div>
-                  <div class="grid grid-cols-1 gap-2">
-                    <% selected_opts.each do |qio| %>
-                      <div class="flex items-center justify-between gap-3 bg-base-200 rounded p-2">
+                  <div class="text-sm font-semibold mb-3">Selected Options</div>
+                  <% selected_opts.each do |qio| %>
+                    <% linked = qio.product_option.linked_product %>
+                    <div class="bg-base-200 rounded-lg p-3 mb-3 last:mb-0">
+                      <div class="flex items-center gap-2 mb-3">
                         <div class="flex-1 min-w-0">
-                          <div class="text-sm truncate"><%= qio.product_option.name %></div>
-                          <% if qio.product_option.linked_product %>
-                            <div class="text-xs text-base-content/60">SKU: <%= qio.product_option.linked_product.sku %></div>
-                          <% end %>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                          <span class="text-xs text-base-content/70">Price</span>
-                          <%= form_with model: qio, 
-                              url: update_option_price_quote_wizard_path(@quote, option_id: qio.id),
-                              method: :patch,
-                              data: { turbo_frame: "quote_item_#{quote_item.id}" },
-                              class: 'flex items-center gap-1' do |of| %>
-                            <span>£</span>
-                            <%= of.number_field :price, 
-                                value: qio.price,
-                                step: 0.01, min: 0,
-                                class: 'input input-bordered input-xs w-20',
-                                data: { action: 'change->price-calculator#submitForm blur->price-calculator#submitForm' } %>
-                            <%= of.submit '✓', class: 'btn btn-xs btn-ghost hidden' %>
+                          <div class="text-sm font-semibold truncate"><%= qio.product_option.name %></div>
+                          <% if linked %>
+                            <div class="text-xs text-base-content/60">SKU: <%= linked.sku %></div>
                           <% end %>
                         </div>
                       </div>
-                    <% end %>
-                  </div>
+
+                      <% if linked %>
+                        <%= form_with model: qio,
+                            url: update_option_price_quote_wizard_path(@quote, option_id: qio.id),
+                            method: :patch,
+                            data: { turbo_frame: "quote_item_#{quote_item.id}" } do |of| %>
+                          <div class="flex items-center justify-between gap-4"
+                               data-controller="price-calculator"
+                               data-price-calculator-retail-value="<%= linked.retail_price || 0 %>"
+                               data-price-calculator-options-total-value="0"
+                               data-price-calculator-quantity-value="1">
+                            <div class="grid grid-cols-5 gap-2 items-end flex-1">
+                              <div class="form-control">
+                                <label class="label-text text-xs">Cost Price</label>
+                                <div class="input input-bordered input-xs bg-base-300 flex items-center text-xs">
+                                  £<%= number_with_precision(linked.cost_price || 0, precision: 2) %>
+                                </div>
+                              </div>
+                              <div class="form-control">
+                                <label class="label-text text-xs">Retail Price</label>
+                                <div class="input input-bordered input-xs bg-base-300 flex items-center text-xs">
+                                  £<%= number_with_precision(linked.retail_price || 0, precision: 2) %>
+                                </div>
+                              </div>
+                              <div class="form-control">
+                                <label class="label-text text-xs">Discount £</label>
+                                <div class="input-group input-group-xs">
+                                  <span class="text-xs">£</span>
+                                  <input type="number" step="0.01" min="0"
+                                         value="<%= ((linked.retail_price.to_f - qio.price.to_f)).round(2) %>"
+                                         class="input input-bordered input-xs w-20 text-xs"
+                                         data-price-calculator-target="discountAmount">
+                                </div>
+                              </div>
+                              <div class="form-control">
+                                <label class="label-text text-xs">Discount %</label>
+                                <input type="number" min="0" max="100" step="0.1"
+                                       value="<%= linked.retail_price.to_f > 0 ? (((linked.retail_price.to_f - qio.price.to_f) / linked.retail_price.to_f) * 100).round(2) : 0 %>"
+                                       class="input input-bordered input-xs w-16 text-xs"
+                                       data-price-calculator-target="discountPercentage">
+                              </div>
+                              <div class="form-control">
+                                <label class="label-text text-xs">Final Price</label>
+                                <div class="input-group input-group-xs">
+                                  <span class="text-xs">£</span>
+                                  <%= of.number_field :price, step: 0.01,
+                                      value: qio.price.to_f,
+                                      class: 'input input-bordered input-xs w-20 text-xs',
+                                      data: { price_calculator_target: 'quotedPrice' } %>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="text-right min-w-[80px]">
+                              <div class="text-xs text-base-content/70">Total</div>
+                              <div class="text-sm font-bold" data-price-calculator-target="lineTotal">
+                                £<%= number_with_precision(qio.price.to_f, precision: 2, delimiter: ',') %>
+                              </div>
+                            </div>
+                          </div>
+                        <% end %>
+                      <% else %>
+                        <div class="text-sm text-base-content/60">No linked product pricing available</div>
+                      <% end %>
+                    </div>
+                  <% end %>
                 </div>
               <% end %>
             <% end %>
@@ -304,7 +352,13 @@
         function submitForm() {
           clearTimeout(updateTimeout);
           updateTimeout = setTimeout(function() {
-            const form = quotedPriceInput.closest('form');
+            // First try the closest form (main product)
+            var form = quotedPriceInput.closest('form');
+            // If not found, look for a form in the parent option card
+            if (!form) {
+              var card = container.closest('.bg-base-200.rounded-lg');
+              if (card) form = card.querySelector('form');
+            }
             if (form && form.requestSubmit) form.requestSubmit();
           }, 500);
         }
