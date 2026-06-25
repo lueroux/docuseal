@@ -9,7 +9,7 @@
   <div id="quote_attachments_list" class="space-y-3 mb-6">
     <% if @quote_attachments.any? %>
       <% @quote_attachments.each do |attachment| %>
-        <%= render 'quote_wizard/attachment_card', attachment: attachment %>
+        <%= render 'quote_wizard/attachment_card', attachment: attachment, quote: @quote %>
       <% end %>
     <% else %>
       <div id="no_attachments_notice" class="text-sm text-base-content/50 italic">

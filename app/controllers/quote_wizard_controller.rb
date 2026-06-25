@@ -103,7 +103,7 @@ class QuoteWizardController < ApplicationController
           render turbo_stream: [
             turbo_stream.append('quote_attachments_list',
                                 partial: 'quote_wizard/attachment_card',
-                                locals: { attachment: @attachment }),
+                                locals: { attachment: @attachment, quote: @quote }),
             turbo_stream.replace('attachment_upload_form',
                                  partial: 'quote_wizard/attachment_upload_form',
                                  locals: { quote: @quote })
