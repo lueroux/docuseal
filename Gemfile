@@ -22,7 +22,6 @@ gem 'faraday-follow_redirects'
 gem 'nokogiri'
 gem 'google-cloud-storage', require: false
 gem 'hexapdf'
-gem 'wicked_pdf'
 gem 'jwt', require: false
 gem 'lograge'
 gem 'numo-narray-alt', require: false
