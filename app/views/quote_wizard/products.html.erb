@@ -23,9 +23,7 @@
           <div class="flex gap-2">
             <input type="text" id="product_search" 
                    placeholder="Search by name, SKU, or brand..." 
-                   class="input input-bordered flex-1"
-                   data-controller="product-search"
-                   data-action="input->product-search#search">
+                   class="input input-bordered flex-1">
             
             <select id="product_select" class="select select-bordered w-64">
               <option value="">Select a product</option>
@@ -48,7 +46,7 @@
 
       <!-- Tab: Search IBCOS -->
       <div id="tab_ibcos" class="tab-content hidden">
-        <ibcos-lookup class="form-control">
+        <div class="form-control">
           <label class="label">
             <span class="label-text">Product SKU</span>
           </label>
@@ -56,18 +54,17 @@
             <input type="text" 
                    id="ibcos_sku" 
                    placeholder="Enter SKU (e.g., ZH-970749901)" 
-                   class="input input-bordered flex-1"
-                   data-sku>
+                   class="input input-bordered flex-1">
             
-            <button type="button" class="btn btn-secondary" data-button>
+            <button type="button" class="btn btn-secondary" id="ibcos_search_btn">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               Search IBCOS
             </button>
           </div>
-          <div class="text-sm mt-1" data-status></div>
-        </ibcos-lookup>
+          <div id="ibcos_status" class="text-sm mt-1"></div>
+        </div>
 
         <!-- IBCOS Result Display -->
         <div id="ibcos_result" class="mt-4 hidden">
@@ -98,8 +95,7 @@
 
       <!-- Tab: Create New Product -->
       <div id="tab_new" class="tab-content hidden">
-        <%= form_with model: Product.new, url: products_path, 
-            data: { turbo_frame: 'new_product_result' } do |pf| %>
+        <%= form_with model: Product.new, url: products_path do |pf| %>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="form-control">
@@ -132,8 +128,6 @@
               <%= pf.number_field :cost_price, step: 0.01, class: 'input input-bordered' %>
             </div>
           </div>
-
-          <turbo-frame id="new_product_result"></turbo-frame>
 
           <div class="flex justify-end gap-2 mt-4">
             <%= pf.submit 'Create & Add to Quote', class: 'btn btn-primary' %>
@@ -173,85 +167,267 @@
   </div>
 
   <script>
-    // Prevent scroll restoration on Turbo Stream updates
-    document.addEventListener('turbo:before-stream-render', (event) => {
-      const scrollY = window.scrollY;
-      requestAnimationFrame(() => {
-        window.scrollTo(0, scrollY);
-      });
-    });
-
-    // Tab switching
-    document.querySelectorAll('[data-tab]').forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        e.preventDefault();
-        const tabName = tab.dataset.tab;
-        
-        // Update tab active state
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-active'));
-        tab.classList.add('tab-active');
-        
-        // Show/hide content
-        document.querySelectorAll('.tab-content').forEach(content => {
-          content.classList.add('hidden');
-        });
-        document.getElementById(`tab_${tabName}`).classList.remove('hidden');
-      });
-    });
-
-    // Product selection and adding
-    const productSelect = document.getElementById('product_select');
-    const addBtn = document.getElementById('add_product_btn');
-
-    productSelect.addEventListener('change', () => {
-      addBtn.disabled = !productSelect.value;
-    });
-
-    addBtn.addEventListener('click', async () => {
-      if (!productSelect.value) return;
+    (function() {
+      const csrfToken = document.querySelector('[name="csrf-token"]')?.content;
+      const quoteId = <%= @quote.id %>;
+      const addItemUrl = '<%= add_item_quote_wizard_path(@quote) %>';
       
-      const productId = productSelect.value;
-      const scrollY = window.scrollY; // Save scroll position
-      
-      addBtn.disabled = true;
-      addBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Adding...';
-      
-      try {
-        const response = await fetch('<%= add_item_quote_wizard_path(@quote) %>', {
+      // ── helpers ──────────────────────────────────────────────
+      function saveScroll(fn) {
+        const y = window.scrollY;
+        fn();
+        requestAnimationFrame(() => window.scrollTo(0, y));
+      }
+
+      async function addProductToQuote(productId, quantity = 1) {
+        const resp = await fetch(addItemUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+            'X-CSRF-Token': csrfToken,
             'Accept': 'text/vnd.turbo-stream.html'
           },
-          body: JSON.stringify({
-            product_id: productId,
-            quantity: 1
-          })
+          body: JSON.stringify({ product_id: productId, quantity })
         });
-        
-        if (response.ok) {
-          const html = await response.text();
-          Turbo.renderStreamMessage(html);
-          
-          // Reset form
+        if (!resp.ok) throw new Error('Failed to add product');
+        const html = await resp.text();
+        Turbo.renderStreamMessage(html);
+      }
+
+      // ── Tab switching ────────────────────────────────────────
+      document.querySelectorAll('[data-tab]').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-active'));
+          tab.classList.add('tab-active');
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+          document.getElementById('tab_' + tab.dataset.tab).classList.remove('hidden');
+        });
+      });
+
+      // ── 1. Catalog search + Add Product ──────────────────────
+      const searchInput = document.getElementById('product_search');
+      const productSelect = document.getElementById('product_select');
+      const addBtn = document.getElementById('add_product_btn');
+      const allOptions = Array.from(productSelect.options).filter(o => o.value);
+
+      if (searchInput) {
+        searchInput.addEventListener('input', () => {
+          const query = searchInput.value.toLowerCase();
+          // Remove all option elements except the placeholder
+          while (productSelect.options.length > 1) productSelect.remove(1);
+          const matches = allOptions.filter(opt =>
+            opt.textContent.toLowerCase().includes(query) ||
+            (opt.dataset.sku || '').toLowerCase().includes(query) ||
+            (opt.dataset.brand || '').toLowerCase().includes(query) ||
+            (opt.dataset.name || '').toLowerCase().includes(query)
+          );
+          matches.forEach(opt => productSelect.appendChild(opt.cloneNode(true)));
+          addBtn.disabled = true;
+        });
+      }
+
+      productSelect.addEventListener('change', () => {
+        addBtn.disabled = !productSelect.value;
+      });
+
+      addBtn.addEventListener('click', async () => {
+        if (!productSelect.value) return;
+        const id = productSelect.value;
+        addBtn.disabled = true;
+        addBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Adding...';
+        try {
+          saveScroll(() => {});
+          await addProductToQuote(id);
           productSelect.value = '';
           addBtn.disabled = true;
           addBtn.textContent = 'Add Product';
-          
-          // Restore scroll position
-          setTimeout(() => window.scrollTo(0, scrollY), 10);
-        } else {
+        } catch (err) {
+          console.error(err);
           alert('Error adding product');
           addBtn.disabled = false;
           addBtn.textContent = 'Add Product';
         }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Error adding product');
-        addBtn.disabled = false;
-        addBtn.textContent = 'Add Product';
+      });
+
+      // ── 2. IBCOS search ──────────────────────────────────────
+      const ibcosSku    = document.getElementById('ibcos_sku');
+      const ibcosBtn    = document.getElementById('ibcos_search_btn');
+      const ibcosStatus = document.getElementById('ibcos_status');
+      const ibcosResult = document.getElementById('ibcos_result');
+      let ibcosProduct  = null; // store last search result
+
+      function setIbcosLoading(loading) {
+        ibcosBtn.disabled = loading;
+        ibcosBtn.innerHTML = loading
+          ? '<span class="loading loading-spinner"></span> Searching...'
+          : '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg> Search IBCOS';
       }
-    });
+
+      function setIbcosStatus(msg, type) {
+        ibcosStatus.textContent = msg;
+        ibcosStatus.className = 'text-sm mt-1 text-' + (type === 'error' ? 'error' : type === 'success' ? 'success' : 'info');
+      }
+
+      function showIbcosResult(product) {
+        ibcosProduct = product;
+        document.getElementById('ibcos_product_name').textContent = product.name || '';
+        document.getElementById('ibcos_product_brand').textContent = product.brand || '';
+        document.getElementById('ibcos_retail_price').textContent = product.retail_price || '0.00';
+        document.getElementById('ibcos_cost_price').textContent = product.cost_price || '0.00';
+        ibcosResult.classList.remove('hidden');
+      }
+
+      ibcosBtn.addEventListener('click', async () => {
+        const sku = ibcosSku.value.trim();
+        if (!sku) { setIbcosStatus('Please enter a SKU first', 'error'); return; }
+        setIbcosLoading(true);
+        setIbcosStatus('Searching IBCOS...', 'info');
+        ibcosResult.classList.add('hidden');
+        try {
+          const resp = await fetch('/ibcos/quick?part_no=' + encodeURIComponent(sku), {
+            headers: { 'Accept': 'application/json' }
+          });
+          const data = await resp.json();
+          if (data.found && data.product) {
+            showIbcosResult(data.product);
+            setIbcosStatus('Product found!', 'success');
+          } else {
+            setIbcosStatus('Product not found in IBCOS', 'error');
+          }
+        } catch (err) {
+          console.error(err);
+          setIbcosStatus('Error searching IBCOS', 'error');
+        } finally {
+          setIbcosLoading(false);
+        }
+      });
+
+      // Also search on Enter key
+      ibcosSku.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') ibcosBtn.click();
+      });
+
+      // Add to Quote button (IBCOS result)
+      document.getElementById('add_ibcos_product').addEventListener('click', async () => {
+        if (!ibcosProduct) { alert('Search for a product first'); return; }
+        const btn = document.getElementById('add_ibcos_product');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Adding...';
+        try {
+          // Look up by SKU locally, create if missing
+          const productId = await findOrCreateProduct(ibcosProduct);
+          await addProductToQuote(productId);
+          btn.textContent = 'Add to Quote';
+          btn.disabled = false;
+        } catch (err) {
+          console.error(err);
+          alert('Error: ' + err.message);
+          btn.textContent = 'Add to Quote';
+          btn.disabled = false;
+        }
+      });
+
+      // Save to Catalog & Add button (IBCOS result)
+      document.getElementById('save_ibcos_product').addEventListener('click', async () => {
+        if (!ibcosProduct) { alert('Search for a product first'); return; }
+        const btn = document.getElementById('save_ibcos_product');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Saving...';
+        try {
+          const productId = await findOrCreateProduct(ibcosProduct);
+          await addProductToQuote(productId);
+          btn.textContent = 'Save to Catalog & Add';
+          btn.disabled = false;
+        } catch (err) {
+          console.error(err);
+          alert('Error: ' + err.message);
+          btn.textContent = 'Save to Catalog & Add';
+          btn.disabled = false;
+        }
+      });
+
+      // Find product by SKU locally, or create it from IBCOS data
+      async function findOrCreateProduct(ibcosData) {
+        // Try finding by SKU in the existing dropdown options
+        const match = allOptions.find(opt => (opt.dataset.sku || '').toUpperCase() === (ibcosData.sku || '').toUpperCase());
+        if (match) return match.value;
+        
+        // Not found locally – create it
+        const resp = await fetch('/products', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken,
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            product: {
+              sku: ibcosData.sku,
+              name: ibcosData.name,
+              brand: ibcosData.brand || '',
+              category: ibcosData.category || '',
+              retail_price: ibcosData.retail_price || 0,
+              cost_price: ibcosData.cost_price || 0
+            }
+          })
+        });
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          throw new Error(errData.errors?.join(', ') || 'Failed to save product');
+        }
+        const created = await resp.json();
+        // Also add to our local options list so future searches find it
+        const opt = document.createElement('option');
+        opt.value = created.id;
+        opt.dataset.sku = created.sku;
+        opt.dataset.name = created.name;
+        opt.dataset.brand = created.brand;
+        opt.textContent = (created.sku || '') + ' - ' + (created.name || '');
+        allOptions.push(opt);
+        productSelect.appendChild(opt);
+        return created.id;
+      }
+
+      // ── 3. Create New Product form ───────────────────────────
+      const newProductForm = document.querySelector('#tab_new form');
+      if (newProductForm) {
+        newProductForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const formData = new FormData(newProductForm);
+          const submitBtn = newProductForm.querySelector('input[type="submit"]');
+          submitBtn.disabled = true;
+          submitBtn.value = 'Creating...';
+          try {
+            const resp = await fetch(newProductForm.action, {
+              method: 'POST',
+              headers: {
+                'X-CSRF-Token': csrfToken,
+                'Accept': 'application/json'
+              },
+              body: formData
+            });
+            if (!resp.ok) {
+              const errData = await resp.json();
+              throw new Error(errData.errors?.join(', ') || 'Creation failed');
+            }
+            const created = await resp.json();
+            // Add to quote
+            await addProductToQuote(created.id || created.product?.id);
+            // Reset form
+            newProductForm.reset();
+            submitBtn.disabled = false;
+            submitBtn.value = 'Create & Add to Quote';
+            // Switch to catalog tab to show the product is added
+            document.querySelector('[data-tab="catalog"]').click();
+          } catch (err) {
+            console.error(err);
+            alert('Error: ' + err.message);
+            submitBtn.disabled = false;
+            submitBtn.value = 'Create & Add to Quote';
+          }
+        });
+      }
+    })();
   </script>
 <% end %>

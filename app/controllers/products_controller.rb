@@ -22,10 +22,14 @@ class ProductsController < ApplicationController
   def create
     @product = current_account.products.build(product_params)
 
-    if @product.save
-      redirect_to @product, notice: 'Product was successfully created.', allow_other_host: true
-    else
-      render :new, status: :unprocessable_content
+    respond_to do |format|
+      if @product.save
+        format.html { redirect_to @product, notice: 'Product was successfully created.', allow_other_host: true }
+        format.json { render json: @product.as_json, status: :created }
+      else
+        format.html { render :new, status: :unprocessable_content }
+        format.json { render json: { errors: @product.errors.full_messages }, status: :unprocessable_content }
+      end
     end
   end
 

@@ -36,6 +36,7 @@ module Ibcos
         render json: { 
           found: true, 
           product: {
+            sku: params[:part_no],
             name: result[:name],
             brand: result[:brand],
             category: result[:category],
