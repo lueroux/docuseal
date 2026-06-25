@@ -15,26 +15,9 @@ class QuotesController < ApplicationController
       format.pdf do
         Rails.logger.info("Starting PDF generation for quote #{@quote.id}")
         begin
-          # Generate HTML using the same document builder as the view
-          html = QuoteDocumentBuilder.new(@quote).build_html
-          
-          # Convert HTML to PDF using wkhtmltopdf
-          pdf_data = WickedPdf.new.pdf_from_string(html, {
-            page_size: 'A4',
-            margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' },
-            print_media_type: true,
-            no_images: false,
-            encoding: 'UTF-8',
-            javascript_delay: 0,
-            disable_javascript: true
-          })
-          
-          # Append attachment pages
-          if @quote.quote_attachments.ordered.any?
-            merger = QuotePdfAttachmentMerger.new(pdf_data, @quote)
-            pdf_data = merger.merge
-          end
-          
+          pdf_generator = QuotePdfGenerator.new(@quote)
+          Rails.logger.info("QuotePdfGenerator initialized")
+          pdf_data = pdf_generator.generate
           Rails.logger.info("PDF generated successfully, size: #{pdf_data.bytesize}")
           send_data pdf_data,
                     filename: "quote-#{@quote.reference_number}.pdf",
