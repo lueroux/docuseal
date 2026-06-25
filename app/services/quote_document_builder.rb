@@ -29,6 +29,7 @@ class QuoteDocumentBuilder
           #{build_items_table}
           #{build_totals}
           #{build_payment_options}
+          #{build_attachments}
           #{build_disclaimer}
           #{build_signature_section}
         </div>
@@ -313,6 +314,43 @@ class QuoteDocumentBuilder
     HTML
   end
 
+  def build_attachments
+    attachments = quote.quote_attachments.ordered
+    return '' unless attachments.any?
+
+    rows = attachments.map do |att|
+      file_url = Rails.application.routes.url_helpers.rails_blob_url(att.file, host: 'https://quotes.buxtons.net')
+      <<~ROW
+        <tr>
+          <td>
+            <strong>#{att.name}</strong>
+            #{att.description.present? ? "<div style='font-size: 11px; color: #666; margin-top: 2px;'>#{att.description}</div>" : ''}
+          </td>
+          <td>#{att.file.filename}</td>
+          <td>#{number_to_human_size(att.file.byte_size)}</td>
+        </tr>
+      ROW
+    end.join("\n")
+
+    <<~HTML
+      <div class="attachments-section" style="margin-bottom: 28px;">
+        <div class="section-title">Attachments</div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">File</th>
+              <th scope="col">Size</th>
+            </tr>
+          </thead>
+          <tbody>
+            #{rows}
+          </tbody>
+        </table>
+      </div>
+    HTML
+  end
+
   def build_disclaimer
     <<~HTML
       <p class="disclaimer">
@@ -451,5 +489,16 @@ class QuoteDocumentBuilder
     
     # Rejoin with decimal point
     parts.join('.')
+  end
+
+  def number_to_human_size(bytes)
+    return '0 Bytes' if bytes.nil? || bytes.zero?
+    
+    units = %w[Bytes KB MB GB TB]
+    exp = (Math.log(bytes) / Math.log(1024)).to_i
+    exp = units.length - 1 if exp >= units.length
+    size = bytes.to_f / (1024 ** exp)
+    
+    format("%.1f %s", size, units[exp])
   end
 end

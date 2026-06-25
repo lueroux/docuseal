@@ -110,10 +110,41 @@ class QuotePdfGenerator
         end
       end
     end
+
+    # Add attachments
+    attachments = quote.quote_attachments.ordered
+    if attachments.any?
+      y_position -= 30
+      canvas.text("Attachments:", at: [50, y_position], font_size: 14)
+      y_position -= 25
+
+      attachments.each do |att|
+        break if y_position < 60
+        canvas.text("#{att.name} — #{att.file.filename} (#{number_to_human_size(att.file.byte_size)})", at: [70, y_position])
+        y_position -= 18
+        if att.description.present?
+          canvas.text("  #{att.description}", at: [70, y_position])
+          y_position -= 16
+        end
+      end
+    end
     
     # Output PDF
     io = StringIO.new
     pdf.write(io)
     io.string
+  end
+
+  private
+
+  def number_to_human_size(bytes)
+    return '0 Bytes' if bytes.nil? || bytes.zero?
+    
+    units = %w[Bytes KB MB GB TB]
+    exp = (Math.log(bytes) / Math.log(1024)).to_i
+    exp = units.length - 1 if exp >= units.length
+    size = bytes.to_f / (1024 ** exp)
+    
+    format("%.1f %s", size, units[exp])
   end
 end
