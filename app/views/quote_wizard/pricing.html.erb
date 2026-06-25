@@ -9,7 +9,11 @@
             <%= form_with model: quote_item, url: update_item_quote_wizard_path(@quote, item_id: quote_item.id),
                 method: :patch, data: { turbo_frame: "quote_item_#{quote_item.id}" } do |f| %>
               
-              <div class="flex items-center justify-between gap-4">
+              <div class="flex items-center justify-between gap-4" 
+                   data-controller="price-calculator" 
+                   data-price-calculator-retail-value="<%= quote_item.retail_price %>"
+                   data-price-calculator-options-total-value="<%= quote_item.options_total %>"
+                   data-price-calculator-quantity-value="<%= quote_item.quantity %>">
                 <!-- Product Info -->
                 <div class="flex-1">
                   <div class="flex items-center gap-2">
@@ -31,11 +35,7 @@
                 </div>
 
                 <!-- Pricing Grid -->
-                <div data-controller="price-calculator" 
-                     data-price-calculator-retail-value="<%= quote_item.retail_price %>"
-                     data-price-calculator-options-total-value="<%= quote_item.options_total %>"
-                     data-price-calculator-quantity-value="<%= quote_item.quantity %>"
-                     class="grid grid-cols-5 gap-3 items-end">
+                <div class="grid grid-cols-5 gap-3 items-end">
                   
                   <div class="form-control">
                     <label class="label label-text text-xs">Cost Price</label>
@@ -59,7 +59,7 @@
                              value="<%= ((quote_item.retail_price - quote_item.quoted_price) rescue 0).round(2) %>"
                              class="input input-bordered input-sm w-24"
                              data-price-calculator-target="discountAmount"
-                             data-action="change->price-calculator#discountAmountChanged">
+                             data-action="input->price-calculator#discountAmountChanged">
                     </div>
                   </div>
 
@@ -69,7 +69,7 @@
                         class: 'input input-bordered input-sm w-20',
                         data: { 
                           price_calculator_target: 'discountPercentage',
-                          action: 'change->price-calculator#discountPercentageChanged' 
+                          action: 'input->price-calculator#discountPercentageChanged' 
                         } %>
                   </div>
 
@@ -81,7 +81,7 @@
                           class: 'input input-bordered input-sm w-28',
                           data: { 
                             price_calculator_target: 'quotedPrice',
-                            action: 'change->price-calculator#quotedPriceChanged' 
+                            action: 'input->price-calculator#quotedPriceChanged' 
                           } %>
                     </div>
                   </div>
@@ -132,8 +132,8 @@
                               data: { turbo_frame: "quote_item_#{quote_item.id}" },
                               class: 'flex items-center gap-1' do |of| %>
                             <span>£</span>
-                            <%= of.number_field :option_price, 
-                                value: qio.option_price,
+                            <%= of.number_field :price, 
+                                value: qio.price,
                                 step: 0.01, min: 0,
                                 class: 'input input-bordered input-xs w-20',
                                 data: { action: 'change->price-calculator#submitForm blur->price-calculator#submitForm' } %>
