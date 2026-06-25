@@ -49,7 +49,7 @@ class QuotesController < ApplicationController
     @quote.user = current_user
 
     if @quote.save
-      redirect_to edit_quote_path(@quote), notice: 'Quote created successfully.'
+      redirect_to quote_wizard_path(@quote, step: 'customer'), notice: 'Quote created. Continue with the wizard.'
     else
       @customers = Customer.where(account: current_account).ordered
       @products = Product.where(account: current_account).available

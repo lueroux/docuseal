@@ -199,15 +199,7 @@ Rails.application.routes.draw do
     get 'quick', to: 'search#quick'
   end
 
-  # Phase 4 — Quote builder
-  resources :quotes do
-    member do
-      get :document
-    end
-    resources :quote_items, only: %i[create update destroy]
-  end
-
-  # Quote wizard (multi-step quote creation)
+  # Phase 4 — Quote wizard (must be before resources :quotes to take precedence)
   get 'quotes/new', to: 'quote_wizard#show', as: :new_quote_wizard
   get 'quotes/:id/wizard', to: 'quote_wizard#show', as: :quote_wizard
   patch 'quotes/:id/wizard', to: 'quote_wizard#update'
@@ -220,6 +212,14 @@ Rails.application.routes.draw do
   post 'quotes/:id/wizard/attachments', to: 'quote_wizard#upload_attachment', as: :upload_attachment_quote_wizard
   delete 'quotes/:id/wizard/attachments/:attachment_id', to: 'quote_wizard#remove_attachment', as: :remove_attachment_quote_wizard
   post 'quotes/:id/wizard/finalize', to: 'quote_wizard#finalize', as: :finalize_quote_wizard
+
+  # Phase 4 — Quote builder
+  resources :quotes do
+    member do
+      get :document
+    end
+    resources :quote_items, only: %i[create update destroy]
+  end
 
   # Phase 2 — Customer portal (magic-link auth)
   namespace :portal do
