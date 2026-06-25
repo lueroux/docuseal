@@ -58,9 +58,7 @@ class QuotesController < ApplicationController
   end
 
   def edit
-    @quote = Quote.includes(quote_items: :product).find(params[:id])
-    @customers = Customer.where(account: current_account).ordered
-    @products = Product.where(account: current_account).available
+    redirect_to quote_wizard_path(params[:id], step: 'customer'), notice: 'Use the wizard to edit this quote.'
   end
 
   def update

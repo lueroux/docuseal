@@ -73,6 +73,43 @@ class QuotePdfGenerator
     
     canvas.text("Total:", at: [350, y_position], font_size: 14)
     canvas.text("£#{format('%.2f', total)}", at: [450, y_position], font_size: 14)
+
+    # Add payment structures
+    structures = quote.quote_payment_structures.order(:payment_type)
+    if structures.any?
+      y_position -= 40
+      canvas.text("Payment Options:", at: [50, y_position], font_size: 14)
+      y_position -= 25
+
+      structures.each do |ps|
+        break if y_position < 60
+        title = "#{ps.payment_type.titleize}#{ps.is_primary? ? ' (Primary)' : ''}"
+        if ps.payment_type == 'cash'
+          canvas.text("#{title}: £#{format('%.2f', ps.total_cost.to_f)}", at: [70, y_position])
+          y_position -= 18
+          if ps.deposit.to_f > 0
+            canvas.text("  Deposit: £#{format('%.2f', ps.deposit)}", at: [70, y_position])
+            y_position -= 16
+          end
+        else
+          details = "#{title}:"
+          details += " £#{format('%.2f', ps.total_cost.to_f)}" if ps.total_cost.to_f > 0
+          details += " | £#{format('%.2f', ps.monthly_payment.to_f)}/mo" if ps.monthly_payment.to_f > 0
+          details += " | #{ps.term_months}mo" if ps.term_months.to_i > 0
+          details += " | #{ps.apr}% APR" if ps.apr.to_f > 0
+          canvas.text(details, at: [70, y_position])
+          y_position -= 18
+          if ps.deposit.to_f > 0
+            canvas.text("  Deposit: £#{format('%.2f', ps.deposit)}", at: [70, y_position])
+            y_position -= 16
+          end
+          if ps.provider.present?
+            canvas.text("  Provider: #{ps.provider}", at: [70, y_position])
+            y_position -= 16
+          end
+        end
+      end
+    end
     
     # Output PDF
     io = StringIO.new

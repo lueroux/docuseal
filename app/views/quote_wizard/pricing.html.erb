@@ -33,6 +33,8 @@
                 <!-- Pricing Grid -->
                 <div data-controller="price-calculator" 
                      data-price-calculator-retail-value="<%= quote_item.retail_price %>"
+                     data-price-calculator-options-total-value="<%= quote_item.options_total %>"
+                     data-price-calculator-quantity-value="<%= quote_item.quantity %>"
                      class="grid grid-cols-5 gap-3 items-end">
                   
                   <div class="form-control">
@@ -88,7 +90,7 @@
                 <!-- Line Total -->
                 <div class="text-right min-w-[120px]">
                   <div class="text-xs text-base-content/70">Line Total</div>
-                  <div class="text-xl font-bold">
+                  <div class="text-xl font-bold" data-price-calculator-target="lineTotal">
                     £<%= number_with_precision(quote_item.total_with_options, precision: 2, delimiter: ',') %>
                   </div>
                 </div>
@@ -107,6 +109,42 @@
                   </div>
                 <% end %>
               </div>
+
+              <!-- Selected Options with Editable Pricing -->
+              <% selected_opts = quote_item.quote_item_options.includes(:product_option).where(is_selected: true) %>
+              <% if selected_opts.any? %>
+                <div class="mt-4 pt-3 border-t border-base-200">
+                  <div class="text-sm font-semibold mb-2">Selected Options</div>
+                  <div class="grid grid-cols-1 gap-2">
+                    <% selected_opts.each do |qio| %>
+                      <div class="flex items-center justify-between gap-3 bg-base-200 rounded p-2">
+                        <div class="flex-1 min-w-0">
+                          <div class="text-sm truncate"><%= qio.product_option.name %></div>
+                          <% if qio.product_option.linked_product %>
+                            <div class="text-xs text-base-content/60">SKU: <%= qio.product_option.linked_product.sku %></div>
+                          <% end %>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                          <span class="text-xs text-base-content/70">Price</span>
+                          <%= form_with model: qio, 
+                              url: update_option_price_quote_wizard_path(@quote, option_id: qio.id),
+                              method: :patch,
+                              data: { turbo_frame: "quote_item_#{quote_item.id}" },
+                              class: 'flex items-center gap-1' do |of| %>
+                            <span>£</span>
+                            <%= of.number_field :option_price, 
+                                value: qio.option_price,
+                                step: 0.01, min: 0,
+                                class: 'input input-bordered input-xs w-20',
+                                data: { action: 'change->price-calculator#submitForm blur->price-calculator#submitForm' } %>
+                            <%= of.submit '✓', class: 'btn btn-xs btn-ghost hidden' %>
+                          <% end %>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
             <% end %>
           </div>
         </div>

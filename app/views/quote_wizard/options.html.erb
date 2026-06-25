@@ -139,7 +139,7 @@
     </div>
   <% end %>
 
-  <script nonce="<%= content_security_policy_nonce %>">
+  <script nonce="<%= content_security_policy_nonce %>" data-turbo-track="reload">
     document.querySelectorAll('.auto-submit-checkbox').forEach(function(cb) {
       cb.addEventListener('change', function() {
         this.closest('form').requestSubmit();

@@ -182,6 +182,54 @@
     </div>
   <% end %>
 
+  <!-- Payment Options -->
+  <% if @quote.quote_payment_structures.any? %>
+    <div class="card bg-base-100 shadow-xl mb-6">
+      <div class="card-body">
+        <h2 class="card-title mb-4">Payment Options</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <% @quote.quote_payment_structures.order(:payment_type).each do |ps| %>
+            <div class="card bg-base-200 <%= ps.is_primary? ? 'ring-2 ring-primary' : '' %>">
+              <div class="card-body p-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <h3 class="font-semibold"><%= ps.payment_type.titleize %></h3>
+                  <% if ps.is_primary? %>
+                    <span class="badge badge-primary badge-xs">Primary</span>
+                  <% end %>
+                </div>
+                <% if ps.payment_type == 'cash' %>
+                  <div class="text-2xl font-bold">£<%= number_with_precision(ps.total_cost, precision: 2, delimiter: ',') %></div>
+                  <% if ps.deposit.to_f > 0 %>
+                    <div class="text-sm text-base-content/70 mt-1">Deposit: £<%= number_with_precision(ps.deposit, precision: 2) %></div>
+                  <% end %>
+                <% else %>
+                  <% if ps.total_cost.to_f > 0 %>
+                    <div class="text-2xl font-bold">£<%= number_with_precision(ps.total_cost, precision: 2, delimiter: ',') %></div>
+                  <% end %>
+                  <% if ps.monthly_payment.to_f > 0 %>
+                    <div class="font-mono">£<%= number_with_precision(ps.monthly_payment, precision: 2) %>/mo</div>
+                  <% end %>
+                  <% if ps.term_months.to_i > 0 %>
+                    <div class="text-sm text-base-content/70"><%= ps.term_months %> months</div>
+                  <% end %>
+                  <% if ps.deposit.to_f > 0 %>
+                    <div class="text-sm text-base-content/70">Deposit: £<%= number_with_precision(ps.deposit, precision: 2) %></div>
+                  <% end %>
+                  <% if ps.apr.to_f > 0 %>
+                    <div class="text-sm text-base-content/70"><%= ps.apr %>% APR</div>
+                  <% end %>
+                  <% if ps.provider.present? %>
+                    <div class="text-sm text-base-content/70 mt-1">via <%= ps.provider %></div>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
   <div class="card bg-base-100 shadow-xl">
     <div class="card-body">
       <h2 class="card-title">Quote Details</h2>

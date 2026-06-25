@@ -13,7 +13,7 @@
 
     <div class="grid gap-4 lg:grid-cols-3">
       <% payment_structure_configs.each do |type, config| %>
-        <% structure = grouped_structures[type] || quote.quote_payment_structures.build(payment_type: type) %>
+        <% structure = grouped_structures[type] || quote.quote_payment_structures.build(payment_type: type, total_cost: (type == 'cash' ? quote.calculate_total : nil)) %>
         <%= turbo_frame_tag "payment_structure_#{type}" do %>
           <%= render 'quote_wizard/payment_structure_card',
                     quote: quote,

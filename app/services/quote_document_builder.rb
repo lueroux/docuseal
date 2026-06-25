@@ -28,6 +28,7 @@ class QuoteDocumentBuilder
           #{build_description if quote.notes.present?}
           #{build_items_table}
           #{build_totals}
+          #{build_payment_options}
           #{build_disclaimer}
           #{build_signature_section}
         </div>
@@ -111,6 +112,15 @@ class QuoteDocumentBuilder
         .product-specs-table tr:nth-child(odd) { background: var(--grey-light); }
         .product-specs-table td:first-child { font-weight: 600; color: var(--text-muted); white-space: nowrap; padding-right: 16px; }
         .product-specs-table td:last-child { color: var(--text-dark); }
+        .payment-options { margin-bottom: 28px; }
+        .section-title { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dark); margin-bottom: 12px; border-bottom: 1px solid var(--grey-light); padding-bottom: 6px; }
+        .payment-grid { display: flex; gap: 16px; }
+        .payment-card { flex: 1; background: var(--grey-light); padding: 14px 16px; }
+        .payment-card.payment-primary { border-left: 4px solid var(--green); }
+        .payment-card-title { font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-dark); margin-bottom: 8px; }
+        .primary-badge { display: inline-block; background: var(--green); color: #fff; font-size: 9px; font-weight: 600; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
+        .payment-amount { font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+        .payment-detail { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
         @media print {
           body { background: #ffffff; padding: 0; }
           .document { width: 100%; min-height: auto; box-shadow: none; padding: 20mm 18mm; margin: 0; }
@@ -264,6 +274,45 @@ class QuoteDocumentBuilder
     HTML
   end
 
+  def build_payment_options
+    structures = quote.quote_payment_structures.order(:payment_type)
+    return '' unless structures.any?
+
+    cards = structures.map do |ps|
+      title = ps.payment_type.titleize
+      primary_badge = ps.is_primary? ? '<span class="primary-badge">Primary</span>' : ''
+      details = if ps.payment_type == 'cash'
+        html = "<div class=\"payment-amount\">£#{format_price(ps.total_cost)}</div>"
+        html += "<div class=\"payment-detail\">Deposit: £#{format_price(ps.deposit)}</div>" if ps.deposit.to_f > 0
+        html
+      else
+        html = ''
+        html += "<div class=\"payment-amount\">£#{format_price(ps.total_cost)}</div>" if ps.total_cost.to_f > 0
+        html += "<div class=\"payment-detail\">£#{format_price(ps.monthly_payment)}/mo</div>" if ps.monthly_payment.to_f > 0
+        html += "<div class=\"payment-detail\">#{ps.term_months} months</div>" if ps.term_months.to_i > 0
+        html += "<div class=\"payment-detail\">Deposit: £#{format_price(ps.deposit)}</div>" if ps.deposit.to_f > 0
+        html += "<div class=\"payment-detail\">#{ps.apr}% APR</div>" if ps.apr.to_f > 0
+        html += "<div class=\"payment-detail\">via #{ps.provider}</div>" if ps.provider.present?
+        html
+      end
+      <<~CARD
+        <div class="payment-card #{ps.is_primary? ? 'payment-primary' : ''}">
+          <div class="payment-card-title">#{title} #{primary_badge}</div>
+          #{details}
+        </div>
+      CARD
+    end.join("\n")
+
+    <<~HTML
+      <div class="payment-options">
+        <div class="section-title">Payment Options</div>
+        <div class="payment-grid">
+          #{cards}
+        </div>
+      </div>
+    HTML
+  end
+
   def build_disclaimer
     <<~HTML
       <p class="disclaimer">
@@ -358,6 +407,13 @@ class QuoteDocumentBuilder
         #{specs_html}
       </div>
     HTML
+  end
+
+  def format_price(value)
+    return '0.00' if value.nil? || value.to_f.zero?
+    parts = format('%.2f', value.to_f).split('.')
+    whole = parts[0].reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse
+    "#{whole}.#{parts[1]}"
   end
 
   def format_address(customer)

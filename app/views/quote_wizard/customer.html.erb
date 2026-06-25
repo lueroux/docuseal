@@ -113,7 +113,7 @@
     </form>
   </dialog>
 
-  <script nonce="<%= content_security_policy_nonce %>">
+  <script nonce="<%= content_security_policy_nonce %>" data-turbo-track="reload">
     document.getElementById('new_customer_btn').addEventListener('click', function() {
       document.getElementById('new_customer_modal').showModal();
     });

@@ -266,6 +266,25 @@ class QuoteWizardController < ApplicationController
     end
   end
 
+  def update_option_price
+    @quote_item_option = QuoteItemOption.find(params[:option_id])
+    
+    if @quote_item_option.update(option_price: params[:quote_item_option][:option_price])
+      respond_to do |format|
+        format.turbo_stream do
+          quote_item = @quote_item_option.quote_item
+          render turbo_stream: [
+            turbo_stream.replace("quote_item_#{quote_item.id}", partial: 'quote_wizard/quote_item', locals: { quote_item: quote_item }),
+            turbo_stream.replace('quote_total', partial: 'quote_wizard/quote_total', locals: { quote: @quote })
+          ]
+        end
+        format.json { render json: { success: true } }
+      end
+    else
+      render json: { errors: @quote_item_option.errors.full_messages }, status: :unprocessable_content
+    end
+  end
+
   def finalize
     # Fetch latest product data from WooCommerce before finalizing
     sync_products_with_woocommerce

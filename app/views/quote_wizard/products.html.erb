@@ -166,7 +166,7 @@
     </div>
   </div>
 
-  <script nonce="<%= content_security_policy_nonce %>">
+  <script nonce="<%= content_security_policy_nonce %>" data-turbo-track="reload">
     (function() {
       const csrfToken = document.querySelector('[name="csrf-token"]')?.content;
       const quoteId = <%= @quote.id %>;
