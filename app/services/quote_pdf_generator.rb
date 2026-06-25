@@ -26,7 +26,9 @@ class QuotePdfGenerator
     canvas.font('Helvetica', size: 12)
     
     # Add title
-    canvas.text("Quote #{quote.reference_number}", at: [50, 750], font_size: 24)
+    canvas.font('Helvetica', size: 24)
+    canvas.text("Quote #{quote.reference_number}", at: [50, 750])
+    canvas.font('Helvetica', size: 12)
     canvas.text("Date: #{quote.created_at.strftime('%d %B %Y')}", at: [50, 720])
     
     # Add customer details
@@ -46,7 +48,9 @@ class QuotePdfGenerator
     
     # Add quote items
     y_position -= 40
-    canvas.text("Items:", at: [50, y_position], font_size: 16)
+    canvas.font('Helvetica', size: 16)
+    canvas.text("Items:", at: [50, y_position])
+    canvas.font('Helvetica', size: 12)
     y_position -= 30
     
     quote.quote_items.ordered.each do |item|
@@ -72,14 +76,18 @@ class QuotePdfGenerator
     canvas.text("£#{format('%.2f', vat)}", at: [450, y_position])
     y_position -= 20
     
-    canvas.text("Total:", at: [350, y_position], font_size: 14)
-    canvas.text("£#{format('%.2f', total)}", at: [450, y_position], font_size: 14)
+    canvas.font('Helvetica', size: 14)
+    canvas.text("Total:", at: [350, y_position])
+    canvas.text("£#{format('%.2f', total)}", at: [450, y_position])
+    canvas.font('Helvetica', size: 12)
 
     # Add payment structures
     structures = quote.quote_payment_structures.order(:payment_type)
     if structures.any?
       y_position -= 40
-      canvas.text("Payment Options:", at: [50, y_position], font_size: 14)
+      canvas.font('Helvetica', size: 14)
+      canvas.text("Payment Options:", at: [50, y_position])
+      canvas.font('Helvetica', size: 12)
       y_position -= 25
 
       structures.each do |ps|
@@ -116,7 +124,9 @@ class QuotePdfGenerator
     attachments = quote.quote_attachments.ordered
     if attachments.any?
       y_position -= 30
-      canvas.text("Attachments:", at: [50, y_position], font_size: 14)
+      canvas.font('Helvetica', size: 14)
+      canvas.text("Attachments:", at: [50, y_position])
+      canvas.font('Helvetica', size: 12)
       y_position -= 25
 
       attachments.each do |att|
