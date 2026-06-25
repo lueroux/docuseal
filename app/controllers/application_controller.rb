@@ -149,7 +149,7 @@ class ApplicationController < ActionController::Base
   def set_csp
     request.content_security_policy = current_content_security_policy.tap do |policy|
       policy.default_src :self
-      policy.script_src :self, -> { "'nonce-#{request.content_security_policy_nonce}'" }
+      policy.script_src :self, :unsafe_inline
       policy.style_src :self, :unsafe_inline
       policy.img_src :self, :https, :http, :blob, :data
       policy.font_src :self, :https, :http, :blob, :data
