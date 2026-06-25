@@ -52,9 +52,8 @@ ENV OPENSSL_CONF=/etc/openssl_legacy.cnf
 
 WORKDIR /app
 
-RUN apk add --no-cache libpq vips redis onnxruntime leptonica ttf-freefont && \
-    rm -f /usr/bin/onnx_test_runner /usr/bin/onnxruntime_test && \
-    apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing wkhtmltopdf || true
+RUN apk add --no-cache libpq vips redis onnxruntime leptonica ttf-freefont fontconfig && \
+    rm -f /usr/bin/onnx_test_runner /usr/bin/onnxruntime_test
 
 RUN addgroup -g 2000 docuseal && adduser -u 2000 -G docuseal -s /bin/sh -D -h /home/docuseal docuseal
 
