@@ -25,3 +25,69 @@
     </div>
   </div>
 </div>
+
+<script nonce="<%= content_security_policy_nonce %>" data-turbo-track="reload">
+  (function() {
+    // Enable/disable toggle for payment options
+    document.querySelectorAll('.payment-enable-toggle').forEach(function(toggle) {
+      var fields = toggle.closest('form').querySelector('.payment-fields');
+      if (!fields) return;
+
+      toggle.addEventListener('change', function() {
+        if (toggle.checked) {
+          fields.classList.remove('hidden');
+        } else {
+          fields.classList.add('hidden');
+        }
+      });
+    });
+
+    // Auto-calculation for finance/lease
+    document.querySelectorAll('form[data-payment-calc="true"]').forEach(function(form) {
+      var totalCost = form.querySelector('[name$="[total_cost]"]');
+      var monthlyPayment = form.querySelector('[name$="[monthly_payment]"]');
+      var termMonths = form.querySelector('[name$="[term_months]"]');
+      var deposit = form.querySelector('[name$="[deposit]"]');
+      var apr = form.querySelector('[name$="[apr]"]');
+      if (!totalCost || !monthlyPayment) return;
+
+      var lastEdited = null;
+      var timeout;
+
+      function safeVal(el) { return parseFloat(el.value) || 0; }
+      function fmt(v) { return v.toFixed(2); }
+
+      function recalcMonthly() {
+        var tc = safeVal(totalCost);
+        var dep = safeVal(deposit);
+        var term = safeVal(termMonths) || 36;
+        if (term > 0) {
+          monthlyPayment.value = fmt(Math.max(0, (tc - dep) / term));
+        }
+      }
+
+      function recalcTotal() {
+        var mp = safeVal(monthlyPayment);
+        var dep = safeVal(deposit);
+        var term = safeVal(termMonths) || 36;
+        totalCost.value = fmt(Math.max(0, dep + (mp * term)));
+      }
+
+      function autoCalc() {
+        clearTimeout(timeout);
+        timeout = setTimeout(function() {
+          if (lastEdited === 'total_cost' || lastEdited === 'deposit' || lastEdited === 'term_months') {
+            recalcMonthly();
+          } else {
+            recalcTotal();
+          }
+        }, 300);
+      }
+
+      totalCost.addEventListener('input', function() { lastEdited = 'total_cost'; autoCalc(); });
+      monthlyPayment.addEventListener('input', function() { lastEdited = 'monthly_payment'; autoCalc(); });
+      if (deposit) deposit.addEventListener('input', function() { lastEdited = 'deposit'; autoCalc(); });
+      if (termMonths) termMonths.addEventListener('input', function() { lastEdited = 'term_months'; autoCalc(); });
+    });
+  })();
+</script>

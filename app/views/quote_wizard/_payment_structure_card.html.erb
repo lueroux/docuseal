@@ -18,8 +18,19 @@
     <%= form_with model: structure,
                   url: structure.persisted? ? quote_wizard_payment_structure_path(quote, structure) : quote_wizard_payment_structures_path(quote),
                   method: structure.persisted? ? :patch : :post,
-                  data: { turbo_frame: "payment_structure_#{structure.payment_type}" } do |f| %>
+                  data: { turbo_frame: "payment_structure_#{structure.payment_type}", payment_calc: (structure.payment_type != 'cash' ? 'true' : nil) } do |f| %>
       <%= f.hidden_field :payment_type %>
+
+      <!-- Enable/Disable toggle -->
+      <div class="flex items-center gap-2">
+        <label class="label cursor-pointer gap-2 p-0">
+          <input type="checkbox" class="toggle toggle-sm toggle-primary payment-enable-toggle"
+                 <%= 'checked' if structure.persisted? || structure.payment_type == 'cash' %>>
+          <span class="text-xs">Enable</span>
+        </label>
+      </div>
+
+      <div class="payment-fields space-y-3 <%= 'hidden' if !structure.persisted? && structure.payment_type != 'cash' %>">
 
       <div class="space-y-3">
         <% case structure.payment_type %>
