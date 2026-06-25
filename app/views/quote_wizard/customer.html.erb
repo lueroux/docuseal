@@ -14,8 +14,7 @@
               { class: 'select select-bordered flex-1', required: true,
                 data: { action: 'change->autosave#save' } } %>
           
-          <button type="button" class="btn btn-secondary" 
-                  onclick="document.getElementById('new_customer_modal').showModal()">
+          <button type="button" class="btn btn-secondary" id="new_customer_btn">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -102,7 +101,7 @@
         <turbo-frame id="customer_form_result"></turbo-frame>
 
         <div class="modal-action">
-          <button type="button" class="btn btn-ghost" onclick="document.getElementById('new_customer_modal').close()">
+          <button type="button" class="btn btn-ghost" id="close_customer_modal_btn">
             Cancel
           </button>
           <%= cf.submit 'Add Customer', class: 'btn btn-primary' %>
@@ -113,4 +112,13 @@
       <button>close</button>
     </form>
   </dialog>
+
+  <script nonce="<%= content_security_policy_nonce %>">
+    document.getElementById('new_customer_btn').addEventListener('click', function() {
+      document.getElementById('new_customer_modal').showModal();
+    });
+    document.getElementById('close_customer_modal_btn').addEventListener('click', function() {
+      document.getElementById('new_customer_modal').close();
+    });
+  </script>
 <% end %>

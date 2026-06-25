@@ -51,6 +51,7 @@
     <div class="card-body">
       <h2 class="card-title">Customer</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <% if @quote.customer %>
         <div>
           <p class="text-sm text-base-content/70">Name</p>
           <p class="font-semibold"><%= @quote.customer.name %></p>
@@ -71,6 +72,9 @@
             <p class="font-semibold"><%= @quote.customer.company.name %></p>
           </div>
         <% end %>
+      <% else %>
+        <p class="text-base-content/50 col-span-2">No customer assigned yet</p>
+      <% end %>
       </div>
     </div>
   </div>

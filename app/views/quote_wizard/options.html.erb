@@ -42,8 +42,7 @@
                                    name="quote_item[option_ids][]" 
                                    value="<%= option.id %>"
                                    <%= 'checked' if quote_item.quote_item_options.exists?(product_option_id: option.id, is_selected: true) %>
-                                   class="checkbox checkbox-primary checkbox-sm"
-                                   onchange="this.form.requestSubmit()">
+                                   class="checkbox checkbox-primary checkbox-sm auto-submit-checkbox">
                           </td>
                           <td>
                             <div class="font-medium"><%= option.name %></div>
@@ -139,4 +138,12 @@
       <p class="text-sm text-base-content/50">Go back to add products first</p>
     </div>
   <% end %>
+
+  <script nonce="<%= content_security_policy_nonce %>">
+    document.querySelectorAll('.auto-submit-checkbox').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        this.closest('form').requestSubmit();
+      });
+    });
+  </script>
 <% end %>

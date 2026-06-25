@@ -43,20 +43,27 @@
       <h3 class="text-lg font-semibold mb-4">Customer Information</h3>
       
       <div class="grid grid-cols-2 gap-4">
-        <div>
-          <div class="text-sm text-base-content/70">Customer</div>
-          <div class="font-semibold"><%= @quote.customer.name %></div>
-        </div>
-        
-        <div>
-          <div class="text-sm text-base-content/70">Email</div>
-          <div><%= @quote.customer.email %></div>
-        </div>
-        
-        <% if @quote.customer.phone.present? %>
+        <% if @quote.customer %>
           <div>
-            <div class="text-sm text-base-content/70">Phone</div>
-            <div><%= @quote.customer.phone %></div>
+            <div class="text-sm text-base-content/70">Customer</div>
+            <div class="font-semibold"><%= @quote.customer.name %></div>
+          </div>
+          
+          <div>
+            <div class="text-sm text-base-content/70">Email</div>
+            <div><%= @quote.customer.email %></div>
+          </div>
+          
+          <% if @quote.customer.phone.present? %>
+            <div>
+              <div class="text-sm text-base-content/70">Phone</div>
+              <div><%= @quote.customer.phone %></div>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="col-span-2">
+            <div class="text-sm text-base-content/70">Customer</div>
+            <div class="text-base-content/50">Not selected yet</div>
           </div>
         <% end %>
         

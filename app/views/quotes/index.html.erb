@@ -29,7 +29,7 @@
             <% @quotes.each do |quote| %>
               <tr>
                 <td class="font-mono"><%= quote.reference_number %></td>
-                <td><%= quote.customer.name %></td>
+                <td><%= quote.customer&.name || '-' %></td>
                 <td><%= quote.title || '-' %></td>
                 <td>
                   <span class="badge <%= case quote.status

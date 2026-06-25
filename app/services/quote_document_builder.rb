@@ -142,17 +142,18 @@ class QuoteDocumentBuilder
   end
 
   def build_meta_section
-    customer_name = quote.customer.company.present? ? quote.customer.company.name : quote.customer.name
-    customer_address = format_address(quote.customer)
+    customer = quote.customer
+    customer_name = customer&.company.present? ? customer.company.name : customer&.name
+    customer_address = customer ? format_address(customer) : ''
     
     <<~HTML
       <div class="meta-row">
         <div class="client-block">
           <div class="block-label">Prepared for</div>
-          <div class="client-name">#{customer_name}</div>
+          <div class="client-name">#{customer_name || 'Not specified'}</div>
           <div class="client-details">
             #{customer_address}
-            #{quote.customer.phone.present? ? "<br>#{quote.customer.phone}" : ''}
+            #{customer&.phone.present? ? "<br>#{customer.phone}" : ''}
           </div>
         </div>
         <div class="quote-details-block">
