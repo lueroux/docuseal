@@ -16,30 +16,18 @@
 
       <!-- Tab: From Catalog -->
       <div id="tab_catalog" class="tab-content">
-        <div class="form-control">
+        <div class="form-control relative">
           <label class="label">
             <span class="label-text">Search Products</span>
           </label>
-          <div class="flex gap-2">
+          <div class="relative">
             <input type="text" id="product_search" 
                    placeholder="Search by name, SKU, or brand..." 
-                   class="input input-bordered flex-1">
-            
-            <select id="product_select" class="select select-bordered w-64">
-              <option value="">Select a product</option>
-              <% @products.each do |product| %>
-                <option value="<%= product.id %>" 
-                        data-name="<%= product.name %>"
-                        data-sku="<%= product.sku %>"
-                        data-brand="<%= product.brand %>">
-                  <%= product.sku %> - <%= product.name %>
-                </option>
-              <% end %>
-            </select>
-
-            <button type="button" id="add_product_btn" class="btn btn-primary" disabled>
-              Add Product
-            </button>
+                   class="input input-bordered w-full"
+                   autocomplete="off">
+            <!-- Autocomplete dropdown -->
+            <div id="product_autocomplete" class="absolute z-50 w-full mt-1 bg-base-100 border border-base-300 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
+            </div>
           </div>
         </div>
       </div>
@@ -205,50 +193,122 @@
         });
       });
 
-      // ── 1. Catalog search + Add Product ──────────────────────
-      const searchInput = document.getElementById('product_search');
-      const productSelect = document.getElementById('product_select');
-      const addBtn = document.getElementById('add_product_btn');
-      const allOptions = Array.from(productSelect.options).filter(o => o.value);
+      // ── Product data (passed from server) ───────────────────
+      const productData = [
+        <% @products.each do |p| %>
+          { id: <%= p.id %>, sku: '<%= j p.sku %>', name: '<%= j p.name %>', brand: '<%= j (p.brand || '') %>' },
+        <% end %>
+      ];
 
-      if (searchInput) {
-        searchInput.addEventListener('input', () => {
-          const query = searchInput.value.toLowerCase();
-          // Remove all option elements except the placeholder
-          while (productSelect.options.length > 1) productSelect.remove(1);
-          const matches = allOptions.filter(opt =>
-            opt.textContent.toLowerCase().includes(query) ||
-            (opt.dataset.sku || '').toLowerCase().includes(query) ||
-            (opt.dataset.brand || '').toLowerCase().includes(query) ||
-            (opt.dataset.name || '').toLowerCase().includes(query)
-          );
-          matches.forEach(opt => productSelect.appendChild(opt.cloneNode(true)));
-          addBtn.disabled = true;
+      // ── 1. Catalog autocomplete ─────────────────────────────
+      const searchInput = document.getElementById('product_search');
+      const autocomplete = document.getElementById('product_autocomplete');
+
+      let selectedIndex = -1; // keyboard navigation
+
+      function filterProducts(query) {
+        const q = query.toLowerCase();
+        return productData.filter(p =>
+          p.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q) ||
+          p.brand.toLowerCase().includes(q)
+        ).slice(0, 10); // limit to 10 results
+      }
+
+      function renderAutocomplete(results) {
+        autocomplete.innerHTML = '';
+        selectedIndex = -1;
+        if (!results.length) {
+          autocomplete.classList.add('hidden');
+          return;
+        }
+        results.forEach((p, i) => {
+          const item = document.createElement('div');
+          item.className = 'flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-base-200 border-b border-base-200 last:border-b-0';
+          item.dataset.productId = p.id;
+          item.dataset.index = i;
+          item.innerHTML = `
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium truncate">${p.name}</div>
+              <div class="text-xs text-base-content/60">${p.sku}${p.brand ? ' · ' + p.brand : ''}</div>
+            </div>
+            <span class="btn btn-xs btn-primary shrink-0 ml-2">Add</span>
+          `;
+          item.addEventListener('click', async () => {
+            autocomplete.classList.add('hidden');
+            searchInput.value = '';
+            await addProductToQuoteSilent(p.id);
+          });
+          item.addEventListener('mouseenter', () => {
+            selectedIndex = i;
+            highlightSelected();
+          });
+          autocomplete.appendChild(item);
+        });
+        autocomplete.classList.remove('hidden');
+      }
+
+      function highlightSelected() {
+        Array.from(autocomplete.children).forEach((el, i) => {
+          el.classList.toggle('bg-base-200', i === selectedIndex);
         });
       }
 
-      productSelect.addEventListener('change', () => {
-        addBtn.disabled = !productSelect.value;
-      });
-
-      addBtn.addEventListener('click', async () => {
-        if (!productSelect.value) return;
-        const id = productSelect.value;
-        addBtn.disabled = true;
-        addBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Adding...';
+      async function addProductToQuoteSilent(productId) {
+        const scrollY = window.scrollY;
         try {
-          saveScroll(() => {});
-          await addProductToQuote(id);
-          productSelect.value = '';
-          addBtn.disabled = true;
-          addBtn.textContent = 'Add Product';
+          await addProductToQuote(productId);
         } catch (err) {
           console.error(err);
           alert('Error adding product');
-          addBtn.disabled = false;
-          addBtn.textContent = 'Add Product';
         }
-      });
+        requestAnimationFrame(() => window.scrollTo(0, scrollY));
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener('input', () => {
+          const results = filterProducts(searchInput.value);
+          renderAutocomplete(results);
+        });
+
+        searchInput.addEventListener('focus', () => {
+          if (searchInput.value.trim()) {
+            const results = filterProducts(searchInput.value);
+            renderAutocomplete(results);
+          }
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+          const items = autocomplete.children;
+          if (!items.length || autocomplete.classList.contains('hidden')) return;
+
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+            highlightSelected();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedIndex = Math.max(selectedIndex - 1, 0);
+            highlightSelected();
+          } else if (e.key === 'Enter' && selectedIndex >= 0) {
+            e.preventDefault();
+            const item = items[selectedIndex];
+            const id = item.dataset.productId;
+            autocomplete.classList.add('hidden');
+            searchInput.value = '';
+            addProductToQuoteSilent(id);
+          } else if (e.key === 'Escape') {
+            autocomplete.classList.add('hidden');
+          }
+        });
+
+        // Close on click outside
+        document.addEventListener('click', (e) => {
+          if (!searchInput.contains(e.target) && !autocomplete.contains(e.target)) {
+            autocomplete.classList.add('hidden');
+          }
+        });
+      }
 
       // ── 2. IBCOS search ──────────────────────────────────────
       const ibcosSku    = document.getElementById('ibcos_sku');
@@ -349,9 +409,9 @@
 
       // Find product by SKU locally, or create it from IBCOS data
       async function findOrCreateProduct(ibcosData) {
-        // Try finding by SKU in the existing dropdown options
-        const match = allOptions.find(opt => (opt.dataset.sku || '').toUpperCase() === (ibcosData.sku || '').toUpperCase());
-        if (match) return match.value;
+        // Try finding by SKU in the product data array
+        const match = productData.find(p => (p.sku || '').toUpperCase() === (ibcosData.sku || '').toUpperCase());
+        if (match) return match.id;
         
         // Not found locally – create it
         const resp = await fetch('/products', {
@@ -377,15 +437,13 @@
           throw new Error(errData.errors?.join(', ') || 'Failed to save product');
         }
         const created = await resp.json();
-        // Also add to our local options list so future searches find it
-        const opt = document.createElement('option');
-        opt.value = created.id;
-        opt.dataset.sku = created.sku;
-        opt.dataset.name = created.name;
-        opt.dataset.brand = created.brand;
-        opt.textContent = (created.sku || '') + ' - ' + (created.name || '');
-        allOptions.push(opt);
-        productSelect.appendChild(opt);
+        // Also add to our local product data so future searches find it
+        productData.push({
+          id: created.id,
+          sku: created.sku || '',
+          name: created.name || '',
+          brand: created.brand || ''
+        });
         return created.id;
       }
 
