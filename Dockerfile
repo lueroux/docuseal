@@ -53,7 +53,8 @@ ENV OPENSSL_CONF=/etc/openssl_legacy.cnf
 WORKDIR /app
 
 RUN apk add --no-cache libpq vips redis onnxruntime leptonica ttf-freefont && \
-    rm -f /usr/bin/onnx_test_runner /usr/bin/onnxruntime_test
+    rm -f /usr/bin/onnx_test_runner /usr/bin/onnxruntime_test && \
+    apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing wkhtmltopdf || true
 
 RUN addgroup -g 2000 docuseal && adduser -u 2000 -G docuseal -s /bin/sh -D -h /home/docuseal docuseal
 
@@ -71,7 +72,7 @@ activate = 1' >> /etc/openssl_legacy.cnf
 
 COPY --chown=docuseal:docuseal ./Gemfile ./Gemfile.lock ./
 
-RUN apk add --no-cache build-base git libpq-dev yaml-dev && bundle install && apk del --no-cache build-base git libpq-dev yaml-dev && rm -rf ~/.bundle /usr/local/bundle/cache && ruby -e "puts Dir['/usr/local/bundle/**/{spec,rdoc,resources/shared,resources/collation,resources/locales,resources/unicode_data/properties}'] + Dir['/usr/local/bundle/gems/*/{test,tests,examples,sample,misc,doc,docs}'] + Dir['/usr/local/bundle/gems/*/ext/**/*.{c,h,o,S}']" | xargs rm -rf && ln -sf /usr/lib/libonnxruntime.so.1 $(ruby -e "print Dir[Gem::Specification.find_by_name('onnxruntime').gem_dir + '/vendor/*.so'].first") && chmod -s /usr/local/bundle/gems/wkhtmltopdf-binary-*/bin/wkhtmltopdf* 2>/dev/null; chmod -s /usr/local/bundle/bin/wkhtmltopdf* 2>/dev/null; true
+RUN apk add --no-cache build-base git libpq-dev yaml-dev && bundle install && apk del --no-cache build-base git libpq-dev yaml-dev && rm -rf ~/.bundle /usr/local/bundle/cache && ruby -e "puts Dir['/usr/local/bundle/**/{spec,rdoc,resources/shared,resources/collation,resources/locales,resources/unicode_data/properties}'] + Dir['/usr/local/bundle/gems/*/{test,tests,examples,sample,misc,doc,docs}'] + Dir['/usr/local/bundle/gems/*/ext/**/*.{c,h,o,S}']" | xargs rm -rf && ln -sf /usr/lib/libonnxruntime.so.1 $(ruby -e "print Dir[Gem::Specification.find_by_name('onnxruntime').gem_dir + '/vendor/*.so'].first")
 
 COPY --chown=docuseal:docuseal ./bin ./bin
 RUN sed -i 's/\r//' ./bin/* && chmod +x ./bin/*
