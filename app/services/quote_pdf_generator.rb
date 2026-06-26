@@ -52,7 +52,7 @@ class QuotePdfGenerator
         'file://' + tmp_html.path
       ]
 
-      _stdout, stderr, status = Open3.capture3(*cmd, timeout: CHROMIUM_TIMEOUT)
+      _stdout, stderr, status = Timeout.timeout(CHROMIUM_TIMEOUT) { Open3.capture3(*cmd) }
 
       unless status.success?
         Rails.logger.error("Chromium PDF failed: #{stderr}")
@@ -321,7 +321,7 @@ class QuotePdfGenerator
   def chromium_available?
     return @chromium_available if defined?(@chromium_available)
 
-    _stdout, _stderr, status = Open3.capture3(CHROMIUM_PATH, '--version', timeout: 5)
+    _stdout, _stderr, status = Timeout.timeout(5) { Open3.capture3(CHROMIUM_PATH, '--version') }
     @chromium_available = status.success?
   rescue Errno::ENOENT, Timeout::Error
     @chromium_available = false
