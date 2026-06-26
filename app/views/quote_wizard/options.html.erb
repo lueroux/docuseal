@@ -14,6 +14,9 @@
             </h3>
 
             <% if product_options.any? %>
+              <% auto_options = product_options.select { |o| !o.customer_choice } %>
+              <% choice_options = product_options.select { |o| o.customer_choice } %>
+
               <%= form_with model: quote_item, url: update_item_quote_wizard_path(@quote, item_id: quote_item.id),
                   method: :patch, local: true do |f| %>
                 
@@ -27,11 +30,69 @@
                         <th class="text-right">Retail</th>
                         <th class="text-right">Option Price</th>
                         <th class="text-right">Margin</th>
-                        <th>Required</th>
+                        <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <% product_options.each do |option| %>
+                      <% auto_options.each do |option| %>
+                        <% linked = option.linked_product %>
+                        <% cost = linked&.cost_price || 0 %>
+                        <% retail = linked&.retail_price || option.price %>
+                        <% margin = cost > 0 ? (((retail - cost) / cost) * 100).round(1) : 0 %>
+                        <tr class="bg-base-200/50">
+                          <td>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-success inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </td>
+                          <td>
+                            <div class="font-medium"><%= option.name %> <span class="text-xs text-base-content/50">(auto)</span></div>
+                            <% if option.description.present? %>
+                              <div class="text-xs text-base-content/70"><%= option.description %></div>
+                            <% end %>
+                            <% if linked %>
+                              <div class="text-xs text-primary mt-1">SKU: <%= linked.sku %></div>
+                            <% end %>
+                          </td>
+                          <td class="text-right font-mono text-sm">
+                            <%= cost > 0 ? number_to_currency(cost) : '-' %>
+                          </td>
+                          <td class="text-right font-mono text-sm">
+                            <%= retail > 0 ? number_to_currency(retail) : '-' %>
+                          </td>
+                          <td class="text-right font-mono text-sm font-bold">
+                            <% if option.price > 0 %>
+                              +<%= number_to_currency(option.price) %>
+                            <% else %>
+                              <span class="text-success">Included</span>
+                            <% end %>
+                          </td>
+                          <td class="text-right">
+                            <% if margin > 0 %>
+                              <span class="badge badge-sm <%= margin >= 30 ? 'badge-success' : margin >= 15 ? 'badge-warning' : 'badge-error' %>"><%= margin %>%</span>
+                            <% else %>
+                              <span class="text-base-content/50">-</span>
+                            <% end %>
+                          </td>
+                          <td>
+                            <% if option.is_required %>
+                              <span class="badge badge-sm badge-warning">Required</span>
+                            <% else %>
+                              <span class="badge badge-sm badge-ghost">Included</span>
+                            <% end %>
+                          </td>
+                        </tr>
+                      <% end %>
+
+                      <% if choice_options.any? && auto_options.any? %>
+                        <tr>
+                          <td colspan="7" class="pt-4 pb-2">
+                            <div class="font-semibold text-sm text-base-content/70 border-b pb-1">Customer Choices — tick to include:</div>
+                          </td>
+                        </tr>
+                      <% end %>
+
+                      <% choice_options.each do |option| %>
                         <% linked = option.linked_product %>
                         <% cost = linked&.cost_price || 0 %>
                         <% retail = linked&.retail_price || option.price %>
@@ -42,9 +103,8 @@
                                    name="quote_item[option_ids][]" 
                                    value="<%= option.id %>"
                                    <%= 'checked' if quote_item.quote_item_options.exists?(product_option_id: option.id, is_selected: true) %>
-                                   <%= 'disabled' if option.is_required %>
-                                   class="checkbox checkbox-primary checkbox-sm auto-submit-checkbox"
-                                   title="<%= option.is_required ? 'This option is required and cannot be removed' : 'Toggle this option' %>">
+                                   class="checkbox checkbox-info checkbox-sm auto-submit-checkbox"
+                                   title="Tick if the customer wants this option">
                           </td>
                           <td>
                             <div class="font-medium"><%= option.name %></div>
@@ -76,9 +136,7 @@
                             <% end %>
                           </td>
                           <td>
-                            <% if option.is_required %>
-                              <span class="badge badge-sm badge-warning">Required</span>
-                            <% end %>
+                            <span class="badge badge-sm badge-info">Choice</span>
                           </td>
                         </tr>
                       <% end %>

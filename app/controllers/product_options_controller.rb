@@ -41,6 +41,7 @@ class ProductOptionsController < ApplicationController
       :description,
       :price,
       :is_required,
+      :customer_choice,
       :option_group,
       :option_type,
       :sort_order,

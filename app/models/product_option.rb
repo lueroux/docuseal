@@ -12,6 +12,8 @@ class ProductOption < ApplicationRecord
   validates :sort_order, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   scope :required, -> { where(is_required: true) }
+  scope :customer_choice, -> { where(customer_choice: true) }
+  scope :auto_include, -> { where(customer_choice: false) }
   scope :by_group, ->(group) { where(option_group: group) }
   scope :ordered, -> { order(:sort_order) }
   scope :linked, -> { where.not(linked_product_id: nil) }

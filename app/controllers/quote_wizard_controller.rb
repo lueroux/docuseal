@@ -440,8 +440,13 @@ class QuoteWizardController < ApplicationController
     quote_item.product.product_options.where(is_required: true).each do |req_opt|
       option_ids << req_opt.id unless option_ids.include?(req_opt.id)
     end
+
+    # Auto-include all non-customer-choice options (they're always on)
+    quote_item.product.product_options.where(customer_choice: false).each do |auto_opt|
+      option_ids << auto_opt.id unless option_ids.include?(auto_opt.id)
+    end
     
-    # Remove unselected options (except required ones)
+    # Remove unselected options (except required + auto-included ones)
     quote_item.quote_item_options.where.not(product_option_id: option_ids).destroy_all
     
     # Add newly selected options

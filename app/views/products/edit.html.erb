@@ -23,6 +23,7 @@
           <th class="font-bold">Price</th>
           <th class="font-bold">Linked Product</th>
           <th class="font-bold">Required</th>
+          <th class="font-bold">Cust. Choice</th>
           <th></th>
         </tr>
       </thead>
@@ -34,6 +35,7 @@
             <td class="font-mono font-semibold"><%= option.price > 0 ? number_to_currency(option.price) : '<span class="text-success font-bold">Free</span>'.html_safe %></td>
             <td><%= option.linked_product ? "<span class='font-medium'>#{option.linked_product.name}</span> <span class='text-xs text-base-content/50'>(#{option.linked_product.sku})</span>".html_safe : '<span class="text-base-content/30 italic">—</span>'.html_safe %></td>
             <td><%= option.is_required ? '<span class="badge badge-warning badge-sm font-bold">Required</span>'.html_safe : '<span class="badge badge-ghost badge-sm">Optional</span>'.html_safe %></td>
+            <td><%= option.customer_choice ? '<span class="badge badge-info badge-sm font-bold">Yes</span>'.html_safe : '<span class="badge badge-ghost badge-sm">No</span>'.html_safe %></td>
             <td>
               <%= button_to 'Remove', product_product_option_path(@product, option), method: :delete, class: 'btn btn-xs btn-error btn-outline', form: { data: { turbo_confirm: 'Remove this option?' } } %>
             </td>
@@ -81,7 +83,11 @@
         <div class="form-control">
           <label class="label cursor-pointer">
             <span class="label-text">Required</span>
-            <%= f.check_box :is_required, class: 'checkbox checkbox-sm checkbox-primary' %>
+            <%= f.check_box :is_required, class: 'checkbox checkbox-sm checkbox-warning' %>
+          </label>
+          <label class="label cursor-pointer">
+            <span class="label-text">Customer Choice</span>
+            <%= f.check_box :customer_choice, class: 'checkbox checkbox-sm checkbox-info' %>
           </label>
         </div>
       </div>

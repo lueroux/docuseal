@@ -450,7 +450,8 @@ class QuoteDocumentBuilder
         price = opt&.price || qio.price
         price_display = price.to_f > 0 ? "+£#{number_with_precision(price, precision: 2)}" : '<span style="color:#94be57;">Included</span>'
         required_badge = opt&.is_required? ? ' <span style="font-size:9px;background:#f59e0b;color:#fff;padding:1px 5px;border-radius:3px;margin-left:5px;">Required</span>' : ''
-        "<tr><td>#{name}#{required_badge}</td><td style=\"text-align:right;\">#{price_display}</td></tr>"
+        choice_badge = opt&.customer_choice? ? ' <span style="font-size:9px;background:#0ea5e9;color:#fff;padding:1px 5px;border-radius:3px;margin-left:5px;">Choice</span>' : ''
+        "<tr><td>#{name}#{required_badge}#{choice_badge}</td><td style=\"text-align:right;\">#{price_display}</td></tr>"
       end
       options_html = "<div class=\"product-specs-title\" style=\"margin-top:16px;\">Add-ons &amp; Options</div><table class=\"product-specs-table\"><tbody>#{option_rows.join}</tbody></table>"
     end
