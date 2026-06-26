@@ -25,6 +25,7 @@
               <th>Type</th>
               <th>Price</th>
               <th>Required</th>
+              <th>Cust. Choice</th>
               <th>Sort Order</th>
               <th>Actions</th>
             </tr>
@@ -45,6 +46,7 @@
                 <td><%= option.option_type %></td>
                 <td><%= number_to_currency(option.price) %></td>
                 <td><%= option.is_required ? 'Yes' : 'No' %></td>
+                <td><%= option.customer_choice ? 'Yes' : 'No' %></td>
                 <td><%= option.sort_order %></td>
                 <td>
                   <%= button_to 'Remove', product_product_option_path(@product, option), method: :delete,
@@ -104,6 +106,10 @@
                 <span class="label-text">Required Option</span>
                 <%= f.check_box :is_required, class: "checkbox" %>
               </label>
+              <label class="label cursor-pointer">
+                <span class="label-text">Customer Choice</span>
+                <%= f.check_box :customer_choice, class: "checkbox" %>
+              </label>
             </div>
           </div>
           <div class="mt-4">
@@ -155,6 +161,10 @@
           <label class="label cursor-pointer">
             <span class="label-text">Required</span>
             <%= f.check_box :is_required, class: "checkbox" %>
+          </label>
+          <label class="label cursor-pointer">
+            <span class="label-text">Customer Choice</span>
+            <%= f.check_box :customer_choice, class: "checkbox" %>
           </label>
         </div>
       </div>
