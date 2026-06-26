@@ -9,7 +9,12 @@ Rails.application.routes.draw do
     end
   end
 
-  root 'dashboard#index'
+  authenticated :user do
+    root to: redirect('/quotes'), as: :authenticated_root
+  end
+  unauthenticated do
+    root to: redirect('/sign_in')
+  end
 
   get 'up' => 'rails/health#show'
   get 'manifest' => 'pwa#manifest'
