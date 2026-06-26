@@ -217,7 +217,6 @@ Rails.application.routes.draw do
   post 'quotes/:id/wizard/attachments', to: 'quote_wizard#upload_attachment', as: :upload_attachment_quote_wizard
   delete 'quotes/:id/wizard/attachments/:attachment_id', to: 'quote_wizard#remove_attachment', as: :remove_attachment_quote_wizard
   post 'quotes/:id/wizard/finalize', to: 'quote_wizard#finalize', as: :finalize_quote_wizard
-  post 'quotes/:id/wizard/send_for_signing', to: 'quote_wizard#send_for_signing', as: :send_for_signing_quote_wizard
   patch 'quotes/:id/wizard/update_option_price/:option_id', to: 'quote_wizard#update_option_price', as: :update_option_price_quote_wizard
 
   # Phase 4 — Quote builder

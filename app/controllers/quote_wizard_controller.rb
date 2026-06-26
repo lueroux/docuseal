@@ -314,39 +314,7 @@ class QuoteWizardController < ApplicationController
     remove_excluded_items
 
     @quote.update!(status: 'draft', total_price: @quote.calculate_total)
-
-    if @quote.customer&.email.present?
-      begin
-        submission = QuoteSigningService.new(@quote, current_user).send_for_signing!
-        redirect_to @quote, notice: "Quote finalised and sent to #{@quote.customer.email} for signing!"
-      rescue => e
-        Rails.logger.error("Failed to send quote for signing: #{e.message}")
-        redirect_to @quote, alert: "Quote saved but signing request failed: #{e.message}. You can send it from the quote page."
-      end
-    else
-      redirect_to @quote, notice: 'Quote finalised. Add a customer to send for signing.'
-    end
-  end
-
-  def send_for_signing
-    unless @quote.customer&.email.present?
-      redirect_to quote_wizard_path(@quote, step: 'customer'), alert: 'Please select a customer first.'
-      return
-    end
-
-    unless @quote.quote_items.any?
-      redirect_to quote_wizard_path(@quote, step: 'products'), alert: 'Please add products first.'
-      return
-    end
-
-    begin
-      submission = QuoteSigningService.new(@quote, current_user).send_for_signing!
-      redirect_to @quote, notice: "Quote sent to #{@quote.customer.email} for signing!"
-    rescue => e
-      Rails.logger.error("Failed to send quote for signing: #{e.message}")
-      redirect_to @quote, alert: "Failed to send: #{e.message}"
-    end
-  end
+    redirect_to @quote, notice: 'Quote created successfully!'
   end
 
   private
