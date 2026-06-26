@@ -436,7 +436,12 @@ class QuoteWizardController < ApplicationController
   def sync_quote_item_options(quote_item, option_ids)
     option_ids = Array(option_ids).map(&:to_i)
     
-    # Remove unselected options
+    # Always keep required options selected
+    quote_item.product.product_options.where(is_required: true).each do |req_opt|
+      option_ids << req_opt.id unless option_ids.include?(req_opt.id)
+    end
+    
+    # Remove unselected options (except required ones)
     quote_item.quote_item_options.where.not(product_option_id: option_ids).destroy_all
     
     # Add newly selected options

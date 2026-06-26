@@ -42,7 +42,9 @@
                                    name="quote_item[option_ids][]" 
                                    value="<%= option.id %>"
                                    <%= 'checked' if quote_item.quote_item_options.exists?(product_option_id: option.id, is_selected: true) %>
-                                   class="checkbox checkbox-primary checkbox-sm auto-submit-checkbox">
+                                   <%= 'disabled' if option.is_required %>
+                                   class="checkbox checkbox-primary checkbox-sm auto-submit-checkbox"
+                                   title="<%= option.is_required ? 'This option is required and cannot be removed' : 'Toggle this option' %>">
                           </td>
                           <td>
                             <div class="font-medium"><%= option.name %></div>

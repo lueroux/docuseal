@@ -431,6 +431,21 @@ class QuoteDocumentBuilder
       specs_html = "<div class=\"product-specs-title\">Specifications</div><table class=\"product-specs-table\"><tbody>#{spec_rows.join}</tbody></table>"
     end
 
+    # Selected options/addons
+    options_html = ''
+    selected_options = item.quote_item_options.where(is_selected: true).includes(:product_option)
+    if selected_options.any?
+      option_rows = selected_options.map do |qio|
+        opt = qio.product_option
+        name = opt&.name || qio.name
+        price = opt&.price || qio.price
+        price_display = price.to_f > 0 ? "+£#{number_with_precision(price, precision: 2)}" : '<span style="color:#94be57;">Included</span>'
+        required_badge = opt&.is_required? ? ' <span style="font-size:9px;background:#f59e0b;color:#fff;padding:1px 5px;border-radius:3px;margin-left:5px;">Required</span>' : ''
+        "<tr><td>#{name}#{required_badge}</td><td style=\"text-align:right;\">#{price_display}</td></tr>"
+      end
+      options_html = "<div class=\"product-specs-title\" style=\"margin-top:16px;\">Add-ons &amp; Options</div><table class=\"product-specs-table\"><tbody>#{option_rows.join}</tbody></table>"
+    end
+
     <<~HTML
       <div class="document page-break product-detail-page">
         <h2 class="product-detail-title">Product Details</h2>
@@ -443,6 +458,7 @@ class QuoteDocumentBuilder
         </div>
         #{description_html}
         #{specs_html}
+        #{options_html}
       </div>
     HTML
   end
