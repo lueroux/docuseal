@@ -34,7 +34,7 @@ class QuotesController < ApplicationController
 
   def document
     @document_html = QuoteDocumentBuilder.new(@quote).build_html
-    render layout: 'quote_document'
+    render layout: false
   end
 
   def new

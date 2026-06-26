@@ -21,6 +21,7 @@ class QuoteDocumentBuilder
         #{build_styles}
       </head>
       <body>
+        <button class="no-print print-button" onclick="window.print()">Print / Save as PDF</button>
         <div class="document">
           #{build_header}
           #{build_title}
@@ -126,7 +127,15 @@ class QuoteDocumentBuilder
           body { background: #ffffff; padding: 0; }
           .document { width: 100%; min-height: auto; box-shadow: none; padding: 20mm 18mm; margin: 0; }
           a { color: inherit; text-decoration: none; }
+          .print-button, .no-print { display: none !important; }
         }
+        .print-button {
+          position: fixed; top: 20px; right: 20px; padding: 12px 24px;
+          background: #94be58; color: white; border: none; border-radius: 6px;
+          cursor: pointer; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          z-index: 1000; font-family: 'Inter', Arial, sans-serif;
+        }
+        .print-button:hover { background: #7aa844; }
       </style>
     CSS
   end
