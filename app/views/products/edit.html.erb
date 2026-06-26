@@ -4,40 +4,53 @@
   <%= render 'form' %>
 </div>
 
-<div class="card bg-base-100 shadow p-6 mt-6">
-  <h2 class="text-xl font-bold mb-4">Add-ons &amp; Options</h2>
-  <p class="text-sm text-base-content/70 mb-4">Options appear as selectable add-ons in the quote wizard and on product detail pages. Linked products are shown with their SKU and retail price.</p>
+<div class="card bg-base-100 shadow p-6 mt-6 border-2 border-primary/20">
+  <h2 class="text-xl font-extrabold mb-2 flex items-center gap-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+    </svg>
+    Add-ons &amp; Options
+  </h2>
+  <p class="text-sm text-base-content/70 mb-4">Options appear as selectable add-ons in the quote wizard and on product detail pages. Link a product to pull its retail price and SKU automatically.</p>
   
-  <div class="overflow-x-auto">
+  <% if @product.product_options.any? %>
+  <div class="overflow-x-auto mb-4">
     <table class="table table-sm">
       <thead>
-        <tr>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Price (£)</th>
-          <th>Linked Product</th>
-          <th>Required</th>
-          <th>Sort</th>
+        <tr class="bg-base-200">
+          <th class="font-bold">Name</th>
+          <th class="font-bold">Description</th>
+          <th class="font-bold">Price</th>
+          <th class="font-bold">Linked Product</th>
+          <th class="font-bold">Required</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="product_options_list">
         <% @product.product_options.order(:sort_order).each do |option| %>
-          <tr id="option_<%= option.id %>">
-            <td><%= option.name %></td>
-            <td class="text-sm text-base-content/70"><%= option.description %></td>
-            <td class="font-mono"><%= option.price > 0 ? number_to_currency(option.price) : 'Free' %></td>
-            <td><%= option.linked_product&.name || '-' %></td>
-            <td><%= option.is_required ? '✅' : '' %></td>
-            <td><%= option.sort_order %></td>
+          <tr id="option_<%= option.id %>" class="hover:bg-base-100">
+            <td class="font-semibold"><%= option.name %></td>
+            <td class="text-sm text-base-content/70"><%= option.description.presence || '<span class="text-base-content/30 italic">—</span>'.html_safe %></td>
+            <td class="font-mono font-semibold"><%= option.price > 0 ? number_to_currency(option.price) : '<span class="text-success font-bold">Free</span>'.html_safe %></td>
+            <td><%= option.linked_product ? "<span class='font-medium'>#{option.linked_product.name}</span> <span class='text-xs text-base-content/50'>(#{option.linked_product.sku})</span>".html_safe : '<span class="text-base-content/30 italic">—</span>'.html_safe %></td>
+            <td><%= option.is_required ? '<span class="badge badge-warning badge-sm font-bold">Required</span>'.html_safe : '<span class="badge badge-ghost badge-sm">Optional</span>'.html_safe %></td>
             <td>
-              <%= button_to 'Remove', product_product_option_path(@product, option), method: :delete, class: 'btn btn-xs btn-error', form: { data: { turbo_confirm: 'Remove this option?' } } %>
+              <%= button_to 'Remove', product_product_option_path(@product, option), method: :delete, class: 'btn btn-xs btn-error btn-outline', form: { data: { turbo_confirm: 'Remove this option?' } } %>
             </td>
           </tr>
         <% end %>
       </tbody>
     </table>
   </div>
+  <% else %>
+    <div class="bg-base-200 rounded-lg p-6 text-center mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 mx-auto text-base-content/30 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+      </svg>
+      <p class="text-base-content/50 font-medium">No options yet</p>
+      <p class="text-sm text-base-content/40">Use the form below to add your first add-on or option.</p>
+    </div>
+  <% end %>
 
   <div class="mt-4 p-4 bg-base-200 rounded-lg">
     <h3 class="text-lg font-semibold mb-3">Add Option</h3>
