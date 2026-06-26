@@ -40,8 +40,6 @@
 #  fk_rails_...  (submission_id => submissions.id)
 #
 class Submitter < ApplicationRecord
-  include SubmitterQuoteLink
-
   belongs_to :submission
   belongs_to :account
   has_one :template, through: :submission

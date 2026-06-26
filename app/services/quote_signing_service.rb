@@ -54,8 +54,6 @@ class QuoteSigningService
     ]
     template.save!
 
-    Templates::ProcessDocument.call(template.documents.first, pdf_data, extract_fields: false)
-
     template
   end
 
