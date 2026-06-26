@@ -1,6 +1,7 @@
 import '@hotwired/turbo'
 import { encodeMethodIntoRequestBody } from '@hotwired/turbo-rails/app/javascript/turbo/fetch_requests'
 
+import { Application } from '@hotwired/stimulus'
 import { createApp, reactive } from 'vue'
 import TemplateBuilder from './template_builder/builder'
 import ImportList from './template_builder/import_list'
@@ -268,4 +269,14 @@ safeRegisterElement('import-list', class extends HTMLElement {
     this.app?.unmount()
     this.appElem?.remove()
   }
+})
+
+// Stimulus — auto-load all controllers from app/javascript/controllers/
+const stimulusApp = Application.start()
+const controllerContext = require.context('./controllers', true, /\.js$/)
+controllerContext.keys().forEach((key) => {
+  const module = controllerContext(key)
+  const controller = module.default || module
+  const name = key.replace(/^\.\//, '').replace(/_controller\.js$/, '').replace(/\//g, '--')
+  stimulusApp.register(name, controller)
 })
