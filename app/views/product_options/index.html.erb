@@ -45,16 +45,8 @@
                 <td><%= option.option_group || '-' %></td>
                 <td><%= option.option_type %></td>
                 <td><%= number_to_currency(option.price) %></td>
-                <td>
-                  <%= form_with model: [@product, option], method: :patch, local: true, class: 'inline' do |f| %>
-                    <%= f.check_box :is_required, class: 'checkbox checkbox-xs checkbox-warning', onchange: 'this.form.requestSubmit()' %>
-                  <% end %>
-                </td>
-                <td>
-                  <%= form_with model: [@product, option], method: :patch, local: true, class: 'inline' do |f| %>
-                    <%= f.check_box :customer_choice, class: 'checkbox checkbox-xs checkbox-info', onchange: 'this.form.requestSubmit()' %>
-                  <% end %>
-                </td>
+                <td><%= option.is_required ? 'Yes' : 'No' %></td>
+                <td><%= option.customer_choice ? 'Yes' : 'No' %></td>
                 <td><%= option.sort_order %></td>
                 <td>
                   <%= button_to 'Remove', product_product_option_path(@product, option), method: :delete,

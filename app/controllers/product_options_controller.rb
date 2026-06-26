@@ -3,7 +3,7 @@
 class ProductOptionsController < ApplicationController
   authorize_resource
   before_action :set_product
-  before_action :set_product_option, only: %i[destroy update]
+  before_action :set_product_option, only: %i[destroy]
 
   def index
     @product_options = @product.product_options.ordered
@@ -16,14 +16,6 @@ class ProductOptionsController < ApplicationController
       redirect_to edit_product_path(@product), notice: 'Product option was successfully added.'
     else
       redirect_to edit_product_path(@product), alert: @product_option.errors.full_messages.to_sentence
-    end
-  end
-
-  def update
-    if @product_option.update(product_option_params)
-      redirect_back fallback_location: product_product_options_path(@product), notice: 'Option updated.'
-    else
-      redirect_back fallback_location: product_product_options_path(@product), alert: @product_option.errors.full_messages.to_sentence
     end
   end
 

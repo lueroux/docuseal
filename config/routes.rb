@@ -194,7 +194,7 @@ Rails.application.routes.draw do
     collection do
       post :sync_all
     end
-    resources :product_options, only: %i[index create update destroy]
+    resources :product_options, only: %i[index create destroy]
     resources :product_compatibility_rules, only: %i[index create destroy]
   end
 
