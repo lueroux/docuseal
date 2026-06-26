@@ -47,6 +47,7 @@ class QuotePdfGenerator
         '--disable-gpu',
         '--no-sandbox',
         '--disable-dev-shm-usage',
+        '--no-pdf-header-footer',
         '--run-all-compositor-stages-before-draw',
         '--print-to-pdf=' + tmp_pdf.path,
         'file://' + tmp_html.path
