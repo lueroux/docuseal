@@ -64,8 +64,10 @@
     <% end %>
 
     <% if @step_index < QuoteWizardController::STEPS.length - 1 %>
-      <%= link_to 'Next', quote_wizard_path(@quote, step: QuoteWizardController::STEPS[@step_index + 1]), 
-          class: 'btn btn-primary' %>
+      <% next_step = QuoteWizardController::STEPS[@step_index + 1] %>
+      <%= link_to 'Next', quote_wizard_path(@quote, step: next_step), 
+          class: 'btn btn-primary',
+          data: { wizard_next: quote_wizard_path(@quote, step: next_step) } %>
     <% else %>
       <% has_blocking_issues = defined?(@compatibility_issues) && @compatibility_issues&.any? { |i| i[:type] == 'requires' } %>
       <%= button_to 'Finalize Quote', finalize_quote_wizard_path(@quote),
@@ -76,3 +78,31 @@
     <% end %>
   </div>
 </div>
+
+<script>
+  document.addEventListener('click', function(e) {
+    const link = e.target.closest('[data-wizard-next]');
+    if (!link) return;
+    
+    const form = document.querySelector('.card-body form');
+    if (!form) return;
+    
+    e.preventDefault();
+    
+    const formData = new FormData(form);
+    const csrfToken = document.querySelector('[name="csrf-token"]')?.content;
+    
+    fetch(form.action, {
+      method: form.method || 'PATCH',
+      body: formData,
+      headers: {
+        'X-CSRF-Token': csrfToken,
+        'Accept': 'application/json'
+      }
+    }).then(function() {
+      window.location = link.dataset.wizardNext;
+    }).catch(function() {
+      window.location = link.dataset.wizardNext;
+    });
+  });
+</script>
