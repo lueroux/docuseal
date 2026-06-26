@@ -13,15 +13,15 @@ class ProductOptionsController < ApplicationController
     @product_option = @product.product_options.build(product_option_params)
 
     if @product_option.save
-      redirect_to product_path(@product), notice: 'Product option was successfully added.'
+      redirect_to edit_product_path(@product), notice: 'Product option was successfully added.'
     else
-      redirect_to product_path(@product), alert: @product_option.errors.full_messages.to_sentence
+      redirect_to edit_product_path(@product), alert: @product_option.errors.full_messages.to_sentence
     end
   end
 
   def destroy
     @product_option.destroy
-    redirect_to product_path(@product), notice: 'Product option was successfully removed.'
+    redirect_to edit_product_path(@product), notice: 'Product option was successfully removed.'
   end
 
   private

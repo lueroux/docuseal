@@ -3,3 +3,78 @@
 <div class="card bg-base-100 shadow p-6">
   <%= render 'form' %>
 </div>
+
+<div class="card bg-base-100 shadow p-6 mt-6">
+  <h2 class="text-xl font-bold mb-4">Add-ons &amp; Options</h2>
+  <p class="text-sm text-base-content/70 mb-4">Options appear as selectable add-ons in the quote wizard and on product detail pages. Linked products are shown with their SKU and retail price.</p>
+  
+  <div class="overflow-x-auto">
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Price (£)</th>
+          <th>Linked Product</th>
+          <th>Required</th>
+          <th>Sort</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="product_options_list">
+        <% @product.product_options.order(:sort_order).each do |option| %>
+          <tr id="option_<%= option.id %>">
+            <td><%= option.name %></td>
+            <td class="text-sm text-base-content/70"><%= option.description %></td>
+            <td class="font-mono"><%= option.price > 0 ? number_to_currency(option.price) : 'Free' %></td>
+            <td><%= option.linked_product&.name || '-' %></td>
+            <td><%= option.is_required ? '✅' : '' %></td>
+            <td><%= option.sort_order %></td>
+            <td>
+              <%= button_to 'Remove', product_product_option_path(@product, option), method: :delete, class: 'btn btn-xs btn-error', form: { data: { turbo_confirm: 'Remove this option?' } } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 p-4 bg-base-200 rounded-lg">
+    <h3 class="text-lg font-semibold mb-3">Add Option</h3>
+    <%= form_with model: [@product, ProductOption.new], local: true, class: 'space-y-3' do |f| %>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="form-control">
+          <%= f.label :name, class: 'label' %>
+          <%= f.text_field :name, class: 'input input-bordered input-sm', placeholder: 'e.g. Cutting Deck', required: true %>
+        </div>
+        <div class="form-control">
+          <%= f.label :description, class: 'label' %>
+          <%= f.text_field :description, class: 'input input-bordered input-sm', placeholder: 'Optional description' %>
+        </div>
+        <div class="form-control">
+          <%= f.label :price, 'Price (£)', class: 'label' %>
+          <%= f.number_field :price, class: 'input input-bordered input-sm', step: '0.01', placeholder: '0.00' %>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="form-control">
+          <%= f.label :linked_product_id, 'Linked Product', class: 'label' %>
+          <%= f.collection_select :linked_product_id, Product.available.order(:name), :id, :name, { prompt: 'None' }, class: 'select select-bordered select-sm' %>
+        </div>
+        <div class="form-control">
+          <%= f.label :sort_order, 'Sort Order', class: 'label' %>
+          <%= f.number_field :sort_order, class: 'input input-bordered input-sm', value: (@product.product_options.maximum(:sort_order) || 0) + 1 %>
+        </div>
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <span class="label-text">Required</span>
+            <%= f.check_box :is_required, class: 'checkbox checkbox-sm checkbox-primary' %>
+          </label>
+        </div>
+      </div>
+      <div>
+        <%= f.submit 'Add Option', class: 'btn btn-sm btn-primary' %>
+      </div>
+    <% end %>
+  </div>
+</div>
