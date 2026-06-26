@@ -3,7 +3,15 @@
 class ProductOptionsController < ApplicationController
   authorize_resource
   before_action :set_product
-  before_action :set_product_option, only: %i[destroy]
+  before_action :set_product_option, only: %i[update destroy]
+
+  def update
+    if @product_option.update(product_option_params)
+      redirect_to product_product_options_path(@product), notice: 'Option updated.'
+    else
+      redirect_to product_product_options_path(@product), alert: @product_option.errors.full_messages.to_sentence
+    end
+  end
 
   def index
     @product_options = @product.product_options.ordered

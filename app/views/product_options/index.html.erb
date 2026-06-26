@@ -45,8 +45,20 @@
                 <td><%= option.option_group || '-' %></td>
                 <td><%= option.option_type %></td>
                 <td><%= number_to_currency(option.price) %></td>
-                <td><%= option.is_required ? 'Yes' : 'No' %></td>
-                <td><%= option.customer_choice ? 'Yes' : 'No' %></td>
+                <td>
+                  <%= button_to option.is_required ? 'Yes' : 'No',
+                        product_product_option_path(@product, option, product_option: { is_required: !option.is_required }),
+                        method: :patch,
+                        class: "btn btn-xs #{option.is_required ? 'btn-warning' : 'btn-ghost'}",
+                        params: { product_option: { is_required: !option.is_required } } %>
+                </td>
+                <td>
+                  <%= button_to option.customer_choice ? 'Yes' : 'No',
+                        product_product_option_path(@product, option, product_option: { customer_choice: !option.customer_choice }),
+                        method: :patch,
+                        class: "btn btn-xs #{option.customer_choice ? 'btn-info' : 'btn-ghost'}",
+                        params: { product_option: { customer_choice: !option.customer_choice } } %>
+                </td>
                 <td><%= option.sort_order %></td>
                 <td>
                   <%= button_to 'Remove', product_product_option_path(@product, option), method: :delete,
