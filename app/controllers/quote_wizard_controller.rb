@@ -317,6 +317,21 @@ class QuoteWizardController < ApplicationController
     redirect_to @quote, notice: 'Quote created successfully!'
   end
 
+  def send_for_signing
+    unless @quote.customer&.email.present?
+      redirect_to quote_wizard_path(@quote, step: 'customer'), alert: 'Please select a customer first.'
+      return
+    end
+
+    unless @quote.quote_items.any?
+      redirect_to quote_wizard_path(@quote, step: 'products'), alert: 'Please add products first.'
+      return
+    end
+
+    @quote.update!(status: :sent, sent_at: Time.current)
+    redirect_to @quote, notice: "Quote #{@quote.reference_number} marked as sent."
+  end
+
   private
 
   def sync_products_with_woocommerce
