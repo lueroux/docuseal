@@ -334,18 +334,16 @@ class QuoteWizardController < ApplicationController
     if params[:id]
       @quote = Quote.find(params[:id])
     else
-      @quote = Quote.find_or_initialize_by(
-        id: session[:draft_quote_id],
+      # Visiting /quotes/new — always start fresh, clear stale draft
+      session.delete(:draft_quote_id)
+      @quote = Quote.new(
         account: current_account,
         user: current_user,
         status: 'draft'
       )
-      
-      unless @quote.persisted?
-        @quote.send(:generate_reference_number) if @quote.reference_number.blank?
-        @quote.save(validate: false)
-        session[:draft_quote_id] = @quote.id
-      end
+      @quote.send(:generate_reference_number) if @quote.reference_number.blank?
+      @quote.save(validate: false)
+      session[:draft_quote_id] = @quote.id
     end
   end
 
