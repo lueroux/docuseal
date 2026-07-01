@@ -181,7 +181,7 @@ module Templates
     end
 
     def normalize_attachment_fields(template, attachments = template.documents)
-      attachments.flat_map do |a|
+      fields = attachments.flat_map do |a|
         pdf_fields = a.metadata['pdf'].delete('fields').to_a if a.metadata['pdf'].present?
 
         next [] if pdf_fields.blank?
@@ -190,6 +190,17 @@ module Templates
 
         pdf_fields
       end
+
+      # Convert first text field to signature field
+      text_fields_converted = 0
+      fields.each do |field|
+        if field['type'] == 'text' && text_fields_converted == 0
+          field['type'] = 'signature'
+          text_fields_converted += 1
+        end
+      end
+
+      fields
     end
 
     def generate_pdf_preview_from_file(attachment, file_path, page_number)
