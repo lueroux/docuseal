@@ -1120,7 +1120,8 @@ export default {
       editModalDocumentUuid: null,
       revisions: [],
       beforeRevisionSnapshot: null,
-      zoomLevel: 1
+      zoomLevel: 1,
+      textFieldsConvertedToSignature: 0
     }
   },
   computed: {
@@ -1870,9 +1871,10 @@ export default {
       }
     },
     insertDetectedField (field) {
-      // First text field should always be a signature field
-      if (this.template.fields.length === 0 && field.type === 'text') {
+      // Only the first text field should be a signature field
+      if (field.type === 'text' && this.textFieldsConvertedToSignature === 0) {
         field.type = 'signature'
+        this.textFieldsConvertedToSignature++
       }
 
       if (!this.withDetectExistingFields || !field.name) {
