@@ -214,7 +214,7 @@ class QuoteDocumentBuilder
     return '' unless quote.quote_items.any?
     
     items_html = quote.quote_items.ordered.map do |item|
-      build_item_row(item)
+      build_item_rows(item)
     end.join("\n")
 
     <<~HTML
@@ -234,20 +234,18 @@ class QuoteDocumentBuilder
     HTML
   end
 
-  def build_item_row(item)
+  def build_item_rows(item)
+    rows = []
+    
+    # Main product row
     description_parts = ["<strong>#{item.product.name}</strong>"]
     description_parts << "<div style='font-size: 11px; color: #666; margin-top: 2px;'>SKU: #{item.product.sku}</div>"
-    
-    if item.quote_item_options.where(is_selected: true).any?
-      options_list = item.quote_item_options.where(is_selected: true).map { |opt| opt.name }.join(', ')
-      description_parts << "<div style='font-size: 11px; margin-top: 4px;'><em>Options: #{options_list}</em></div>"
-    end
     
     if item.notes.present?
       description_parts << "<div style='font-size: 11px; color: #666; margin-top: 4px;'>#{item.notes}</div>"
     end
 
-    <<~HTML
+    rows << <<~HTML
       <tr>
         <td>#{description_parts.join}</td>
         <td>#{item.quantity}</td>
@@ -255,10 +253,38 @@ class QuoteDocumentBuilder
         <td>£#{number_with_precision(item.line_total, precision: 2)}</td>
       </tr>
     HTML
+
+    # Customer choice options as separate checkboxed rows
+    customer_choices = item.quote_item_options.joins(:product_option)
+      .where(product_options: { customer_choice: true })
+      .where(is_selected: true)
+    
+    if customer_choices.any?
+      customer_choices.each do |opt|
+        price = opt.price.to_f
+        price_display = price > 0 ? "£#{number_with_precision(price, precision: 2)}" : 'Included'
+        checkbox_html = "<input type='checkbox' disabled checked style='margin-right: 8px;' />"
+        
+        rows << <<~HTML
+          <tr style="background: #f9f9f9;">
+            <td>
+              <div style='font-size: 11px; padding-left: 20px;'>
+                #{checkbox_html}<em>#{opt.name}</em>
+              </div>
+            </td>
+            <td>#{item.quantity}</td>
+            <td>#{price_display}</td>
+            <td>#{price > 0 ? "£#{number_with_precision(price * item.quantity, precision: 2)}" : '-'}</td>
+          </tr>
+        HTML
+      end
+    end
+
+    rows.join("\n")
   end
 
   def build_totals
-    subtotal = quote.quote_items.sum { |item| item.line_total }
+    subtotal = quote.quote_items.sum { |item| item.total_with_options }
     vat = subtotal * 0.20
     total = subtotal + vat
 
