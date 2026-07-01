@@ -47,7 +47,7 @@ class QuoteDocumentBuilder
       <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', Arial, sans-serif; font-size: 13px; color: #242424; background: #e5e5e5; padding: 32px 16px; }
-        .document { width: 794px; min-height: 1123px; margin: 0 auto; padding: 56px 64px 48px; position: relative; }
+        .document { width: 794px; min-height: 1123px; margin: 0 auto; padding: 56px 64px 48px; position: relative; background: white; }
         :root { --green: #94be57; --green-dark: #7aa844; --grey-light: #f4f4f4; --grey-mid: #c8c8c8; --text-dark: #242424; --text-muted: #666666; }
         .uppercase { text-transform: uppercase; }
         .text-right { text-align: right; }
