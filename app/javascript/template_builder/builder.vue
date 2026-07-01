@@ -1378,6 +1378,17 @@ export default {
     window.removeEventListener('resize', this.onWindowResize)
     window.removeEventListener('dragleave', this.onWindowDragLeave)
   },
+  mounted () {
+    // Auto-run field detection when template opens with no fields
+    if (this.withFieldsDetection && this.editable && this.template.fields.length === 0 && !this.template.schema.some((item) => item.dynamic)) {
+      this.$nextTick(() => {
+        const firstDocument = this.sortedDocuments[0]
+        if (firstDocument) {
+          this.detectFieldsForPage({ page: 0, attachmentUuid: firstDocument.attachment_uuid })
+        }
+      })
+    }
+  },
   beforeUpdate () {
     this.documentRefs = []
   },
@@ -1859,6 +1870,11 @@ export default {
       }
     },
     insertDetectedField (field) {
+      // First text field should always be a signature field
+      if (this.template.fields.length === 0 && field.type === 'text') {
+        field.type = 'signature'
+      }
+
       if (!this.withDetectExistingFields || !field.name) {
         this.insertField(field)
 
