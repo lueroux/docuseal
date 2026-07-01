@@ -196,6 +196,7 @@ Rails.application.routes.draw do
     end
     resources :product_options, only: %i[index create update destroy]
     resources :product_compatibility_rules, only: %i[index create destroy]
+    resources :product_documents, only: %i[index create destroy]
   end
 
   # Phase 3 — IBCOS Gold API endpoints

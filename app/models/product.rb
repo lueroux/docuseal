@@ -4,6 +4,7 @@ class Product < ApplicationRecord
   belongs_to :account
   has_many :product_options, dependent: :destroy
   has_many :product_compatibility_rules, dependent: :destroy
+  has_many :product_documents, dependent: :destroy
   has_many :quote_items, dependent: :nullify
 
   validates :sku, presence: true, uniqueness: { scope: :account_id }
