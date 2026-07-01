@@ -37,7 +37,58 @@
             <td><%= option.is_required ? '<span class="badge badge-warning badge-sm font-bold">Required</span>'.html_safe : '<span class="badge badge-ghost badge-sm">Optional</span>'.html_safe %></td>
             <td><%= option.customer_choice ? '<span class="badge badge-info badge-sm font-bold">Yes</span>'.html_safe : '<span class="badge badge-ghost badge-sm">No</span>'.html_safe %></td>
             <td>
-              <%= button_to 'Remove', product_product_option_path(@product, option), method: :delete, class: 'btn btn-xs btn-error btn-outline', form: { data: { turbo_confirm: 'Remove this option?' } } %>
+              <div class="flex gap-1">
+                <%= button_to 'Edit', '#', 
+                    onclick: "document.getElementById('edit_option_#{option.id}').classList.toggle('hidden'); return false;",
+                    class: 'btn btn-xs btn-primary btn-outline' %>
+                <%= button_to 'Remove', product_product_option_path(@product, option), method: :delete, class: 'btn btn-xs btn-error btn-outline', form: { data: { turbo_confirm: 'Remove this option?' } } %>
+              </div>
+            </td>
+          </tr>
+          <tr id="edit_option_<%= option.id %>" class="hidden">
+            <td colspan="7" class="p-4 bg-base-100">
+              <%= form_with model: [@product, option], url: product_product_option_path(@product, option), method: :patch, local: true, class: 'space-y-3' do |f| %>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div class="form-control">
+                    <%= f.label :name, class: 'label' %>
+                    <%= f.text_field :name, class: 'input input-bordered input-sm', required: true %>
+                  </div>
+                  <div class="form-control">
+                    <%= f.label :description, class: 'label' %>
+                    <%= f.text_field :description, class: 'input input-bordered input-sm' %>
+                  </div>
+                  <div class="form-control">
+                    <%= f.label :price, 'Price (£)', class: 'label' %>
+                    <%= f.number_field :price, class: 'input input-bordered input-sm', step: '0.01' %>
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div class="form-control">
+                    <%= f.label :linked_product_id, 'Linked Product', class: 'label' %>
+                    <%= f.collection_select :linked_product_id, Product.available.where.not(id: @product.id).order(:name), :id, :name, { include_blank: 'None' }, class: 'select select-bordered select-sm' %>
+                  </div>
+                  <div class="form-control">
+                    <%= f.label :sort_order, 'Sort Order', class: 'label' %>
+                    <%= f.number_field :sort_order, class: 'input input-bordered input-sm' %>
+                  </div>
+                  <div class="form-control">
+                    <label class="label cursor-pointer">
+                      <span class="label-text">Required</span>
+                      <%= f.check_box :is_required, class: 'checkbox checkbox-sm checkbox-warning' %>
+                    </label>
+                    <label class="label cursor-pointer">
+                      <span class="label-text">Customer Choice</span>
+                      <%= f.check_box :customer_choice, class: 'checkbox checkbox-sm checkbox-info' %>
+                    </label>
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <%= f.submit 'Save Changes', class: 'btn btn-sm btn-primary' %>
+                  <%= button_to 'Cancel', '#', 
+                      onclick: "document.getElementById('edit_option_#{option.id}').classList.add('hidden'); return false;",
+                      class: 'btn btn-sm btn-ghost' %>
+                </div>
+              <% end %>
             </td>
           </tr>
         <% end %>
