@@ -4,6 +4,7 @@ class Quote < ApplicationRecord
   belongs_to :account
   belongs_to :user
   belongs_to :customer, optional: true
+  belongs_to :template, optional: true
   has_many :quote_items, dependent: :destroy
   has_many :quote_sections, dependent: :destroy
   has_many :quote_payment_structures, dependent: :destroy

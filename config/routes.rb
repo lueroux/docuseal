@@ -225,6 +225,7 @@ Rails.application.routes.draw do
   resources :quotes do
     member do
       get :document
+      post :open_in_builder
     end
     resources :quote_items, only: %i[create update destroy]
   end

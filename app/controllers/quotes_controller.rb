@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class QuotesController < ApplicationController
-  before_action :set_quote, only: %i[show edit update destroy document]
+  before_action :set_quote, only: %i[show edit update destroy document open_in_builder]
   authorize_resource
 
   def index
@@ -35,6 +35,60 @@ class QuotesController < ApplicationController
   def document
     @document_html = QuoteDocumentBuilder.new(@quote).build_html
     render layout: false
+  end
+
+  def open_in_builder
+    template = @quote.template
+
+    if template.present?
+      template.documents.purge
+    else
+      template = Template.new
+      template.account = current_account
+      template.author = current_user
+      template.folder = TemplateFolders.find_or_create_by_name(current_user, 'Quotes')
+    end
+
+    template.name = "Quote #{@quote.reference_number}"
+    Templates.maybe_assign_access(template)
+    template.save!
+
+    pdf_data = QuotePdfGenerator.new(@quote).generate
+
+    tempfile = Tempfile.new(['quote', '.pdf'])
+    tempfile.binmode
+    tempfile.write(pdf_data)
+    tempfile.rewind
+
+    uploaded_file = ActionDispatch::Http::UploadedFile.new(
+      tempfile: tempfile,
+      filename: "quote-#{@quote.reference_number}.pdf",
+      type: 'application/pdf'
+    )
+
+    documents, = Templates::CreateAttachments.call(template, { files: [uploaded_file] }, extract_fields: true)
+    schema = documents.map { |doc| { attachment_uuid: doc.uuid, name: doc.filename.base } }
+
+    if template.fields.blank?
+      template.fields = Templates::ProcessDocument.normalize_attachment_fields(template, documents)
+      schema.each { |item| item['pending_fields'] = true } if template.fields.present?
+    end
+
+    template.update!(schema: schema)
+
+    @quote.update!(template: template) if @quote.template_id != template.id
+
+    WebhookUrls.enqueue_events(template, 'template.created')
+    SearchEntries.enqueue_reindex(template)
+
+    redirect_to edit_template_path(template)
+  rescue StandardError => e
+    Rails.logger.error("Failed to open quote #{@quote.id} in builder: #{e.class} - #{e.message}")
+    Rails.logger.error(e.backtrace&.first(5)&.join("\n"))
+    redirect_to quote_path(@quote), alert: "Unable to open document in builder: #{e.message}"
+  ensure
+    tempfile&.close
+    tempfile&.unlink
   end
 
   def new
